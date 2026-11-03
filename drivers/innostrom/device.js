@@ -98,7 +98,12 @@ class InnostromDevice extends Homey.Device {
     this._retryTimer = null;
     this._backoffIndex = 0;
     this._previousDisplayPrice = null;
-    this._tomorrowWasFull = this.priceStore.hasFullDay(addLocalDays(new Date(), 1, this.tz), { ratio: TOMORROW_COVERAGE_RATIO });
+    // Day key of the "tomorrow" that has already been announced; a boolean would stay true
+    // after the first day and the trigger would never fire again until the app restarts.
+    const tomorrowNow = addLocalDays(new Date(), 1, this.tz);
+    this._tomorrowAnnouncedFor = this.priceStore.hasFullDay(tomorrowNow, { ratio: TOMORROW_COVERAGE_RATIO })
+      ? localDateKey(tomorrowNow, this.tz)
+      : null;
     this._noTomorrowAlarmDate = null;
 
     this._triggerPriceChanged = this.homey.flow.getDeviceTriggerCard('price_changed');
@@ -269,8 +274,9 @@ class InnostromDevice extends Homey.Device {
     }
 
     if (this.priceStore.hasFullDay(tomorrow, { ratio: TOMORROW_COVERAGE_RATIO })) {
-      if (!this._tomorrowWasFull) {
-        this._tomorrowWasFull = true;
+      const tomorrowKey = localDateKey(tomorrow, this.tz);
+      if (this._tomorrowAnnouncedFor !== tomorrowKey) {
+        this._tomorrowAnnouncedFor = tomorrowKey;
         await this._fireTomorrowAvailable(tomorrow);
       }
       this._scheduleDailyFetch();
