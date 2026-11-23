@@ -150,6 +150,10 @@ module.exports = {
     return { flows: await homey.app.ems.listFlows() };
   },
 
+  async getEmsCommandFlows({ homey }) {
+    return homey.app.ems.commandFlowStatus();
+  },
+
   async getEmsConsumers({ homey }) {
     const r = homey.app.ems.runner;
     return {

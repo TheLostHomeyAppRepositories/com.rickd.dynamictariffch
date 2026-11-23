@@ -218,6 +218,10 @@
       "method": "get",
       "path": "/ems/flows"
     },
+    "getEmsCommandFlows": {
+      "method": "get",
+      "path": "/ems/command-flows"
+    },
     "putEmsPvHistory": {
       "method": "put",
       "path": "/ems/pv-history"

@@ -72,6 +72,8 @@
       cmdT: { 'battery.charge': 'Batterie: aus dem Netz laden', 'battery.hold': 'Batterie: halten (nicht entladen)', 'battery.normal': 'Batterie: Normalbetrieb', 'charger.start': 'Wallbox: Laden starten', 'charger.set': 'Wallbox: Ladeleistung setzen', 'charger.stop': 'Wallbox: Laden stoppen', 'sgready.normal': 'SG-Ready: Normalbetrieb', 'sgready.boost': 'SG-Ready: Empfehlung (Boost)', 'sgready.forced': 'SG-Ready: Zwangsladung', 'dhw.program': 'Warmwasser: Programm ein', 'dhw.normal': 'Warmwasser: zurück auf Normal', 'dhw.delay': 'Warmwasser: verzögern' },
       cmdTest: 'Testen', cmdTestSent: 'Befehl ausgegeben:', cmdTestFail: 'Befehl fehlgeschlagen:', cmdTestWhy: 'Mit «Testen» gibst du den Befehl einmal von Hand aus, auch im Testmodus, um deinen Flow zu prüfen (Werte vorsichtig: die Batterie bekommt keinen Ladeauftrag über den aktuellen Stand).',
       cmdLabel: 'Flow-Rezepte', cmdRow: 'Befehle der App an deine Geräte', cmdTagsLbl: 'Tags',
+      cmdFlowOk: 'Flow vorhanden', cmdFlowMissing: 'Kein Flow', cmdFlowOff: 'Flow ist ausgeschaltet', cmdFlowBroken: 'Flow ist defekt', cmdFlowEmpty: 'Flow ohne Aktion',
+      cmdCheck: 'Flows neu prüfen', cmdChecking: 'Prüfe Flows …', cmdCheckFail: 'Flows konnten nicht geprüft werden', cmdSummary: 'mit Flow', cmdWhyCheck: 'Der Punkt zeigt, ob ein eingeschalteter Flow auf den Befehl wartet (Auslöser «Das Energiemanagement gibt einen Befehl»).',
       cmdIntro: 'Die App schaltet fremde Geräte nicht selbst: Homey erlaubt Apps nicht, Karten anderer Geräte auszuführen. Stattdessen gibt sie Befehle aus. Lege je Befehl einen Flow an: WENN «Das Energiemanagement gibt den Befehl …», DANN die Karte deines Geräts (egal welche Marke). Die Werte stehen als Tags zur Verfügung. Befehle gibt es nur live, im Testmodus werden sie nur protokolliert.',
       cmdWhere: 'Neuer Flow, WENN, App «Energiemanagement», Karte «Das Energiemanagement gibt einen Befehl», Befehl wählen.',
       cmdFires: 'Die App gibt aus:', cmdNone: 'Keine Befehle (noch nichts eingerichtet).', cmdOn: 'einschalten', cmdOff: 'ausschalten', cmdShed: 'Schutz', cmdHintHdr: 'So gehts',
@@ -297,6 +299,8 @@
       cmdT: { 'battery.charge': 'Battery: charge from the grid', 'battery.hold': 'Battery: hold (do not discharge)', 'battery.normal': 'Battery: normal operation', 'charger.start': 'EV charger: start charging', 'charger.set': 'EV charger: set charging power', 'charger.stop': 'EV charger: stop charging', 'sgready.normal': 'SG Ready: normal operation', 'sgready.boost': 'SG Ready: recommendation (boost)', 'sgready.forced': 'SG Ready: forced charging', 'dhw.program': 'Hot water: program on', 'dhw.normal': 'Hot water: back to normal', 'dhw.delay': 'Hot water: delay' },
       cmdTest: 'Test', cmdTestSent: 'Command sent:', cmdTestFail: 'Command failed:', cmdTestWhy: 'With "Test" you give the command once by hand, also in test mode, to check your flow (careful values: the battery gets no charge order above the current level).',
       cmdLabel: 'Flow recipes', cmdRow: 'Commands of the app to your devices', cmdTagsLbl: 'Tags',
+      cmdFlowOk: 'Flow found', cmdFlowMissing: 'No flow', cmdFlowOff: 'Flow is switched off', cmdFlowBroken: 'Flow is broken', cmdFlowEmpty: 'Flow without action',
+      cmdCheck: 'Check flows again', cmdChecking: 'Checking flows …', cmdCheckFail: 'Flows could not be checked', cmdSummary: 'with a flow', cmdWhyCheck: 'The dot shows whether an enabled flow waits for the command (trigger "The energy management gives a command").',
       cmdIntro: 'The app does not switch other devices itself: Homey does not allow apps to run the cards of other devices. It gives commands instead. Add one flow per command: WHEN "The energy management gives the command ...", THEN the card of your device (any brand). The values are available as tags. Commands only go out live; in test mode they are only logged.',
       cmdWhere: 'New flow, WHEN, app "Energy management", card "The energy management gives a command", choose the command.',
       cmdFires: 'The app gives:', cmdNone: 'No commands (nothing set up yet).', cmdOn: 'switch on', cmdOff: 'switch off', cmdShed: 'Protection', cmdHintHdr: 'How to',
@@ -923,14 +927,56 @@
     if (/^shed\./.test(id)) return S.cmdShed + ': ' + (name || id) + ' ' + S.cmdOff;
     return id;
   }
+  /** Punkt mit Text: gibt es einen eingeschalteten Flow, der auf diesen Befehl wartet? (leer, solange noch nicht geprüft) */
+  function cmdBadge(id) {
+    var st = state.cmdFlows && state.cmdFlows[id];
+    if (!st) return '';
+    var m = { ok: ['ok', S.cmdFlowOk], empty: ['warn', S.cmdFlowEmpty], broken: ['alarm', S.cmdFlowBroken], off: ['warn', S.cmdFlowOff], missing: ['alarm', S.cmdFlowMissing] }[st.state];
+    if (!m) return '';
+    var names = st.state === 'ok' || st.state === 'empty' ? ': ' + st.flows.map(function (f) { return f.name; }).join(', ') : '';
+    return '<span class="st-line" style="display:inline-flex;margin:0 0 0 6px" title="' + esc(S.cmdWhyCheck) + '"><span class="st-dot ' + m[0] + '"></span>' + esc(m[1] + names) + '</span>';
+  }
   function cmdFiresHtml(ids) {
-    return '<p class="ems-why">' + esc(S.cmdFires) + ' ' + ids.map(function (x) { return '<b>' + esc(cmdName(x[0], x[1])) + '</b>'; }).join(' · ') + '. ' + esc(S.cmdWhere) + '</p>';
+    return '<p class="ems-why">' + esc(S.cmdFires) + '</p>'
+      + '<ul style="margin:2px 0 4px 18px;padding:0">' + ids.map(function (x) { return '<li><b>' + esc(cmdName(x[0], x[1])) + '</b>' + cmdBadge(x[0]) + '</li>'; }).join('') + '</ul>'
+      + '<p class="ems-why">' + esc(S.cmdWhere) + '</p>';
+  }
+  /** Kleines Abzeichen an einer Zeile (Batterie, Wallbox, Verbraucher …): alle Befehle mit diesem Anfang haben einen Flow? Sonst der schlechteste Zustand. */
+  function cmdRowBadge(prefix) {
+    if (!state.cmdFlows) return '';
+    var ids = ((state.shadow && state.shadow.commands) || []).filter(function (c) { return c.id.indexOf(prefix) === 0; }).map(function (c) { return c.id; });
+    if (!ids.length) return '';
+    var rank = { ok: 0, empty: 1, off: 2, broken: 3, missing: 4 };
+    var worst = 'ok';
+    var bad = 0;
+    ids.forEach(function (id) {
+      var st = (state.cmdFlows[id] && state.cmdFlows[id].state) || 'missing';
+      if (st !== 'ok') bad += 1;
+      if (rank[st] > rank[worst]) worst = st;
+    });
+    var m = { ok: ['ok', S.cmdFlowOk], empty: ['warn', S.cmdFlowEmpty], broken: ['alarm', S.cmdFlowBroken], off: ['warn', S.cmdFlowOff], missing: ['alarm', S.cmdFlowMissing] }[worst];
+    var txt = m[1] + (bad && ids.length > 1 ? ' (' + bad + '/' + ids.length + ')' : '');
+    return '<span class="ems-tag" style="background:var(--st-chip-bg);color:var(--st-text)" title="' + esc(S.cmdWhyCheck) + '"><span class="st-dot ' + m[0] + '" style="display:inline-block;width:7px;height:7px;margin-right:4px"></span>' + esc(txt) + '</span>';
+  }
+  /** Zusammenfassung für die Zeile «Flow-Rezepte»: wie viele Befehle haben einen Flow? */
+  function cmdSummary() {
+    var list = (state.shadow && state.shadow.commands) || [];
+    if (!state.cmdFlows) return { text: list.length + '', cls: 'muted' };
+    var ok = list.filter(function (c) { return state.cmdFlows[c.id] && state.cmdFlows[c.id].state === 'ok'; }).length;
+    return { text: ok + '/' + list.length + ' ' + S.cmdSummary, cls: ok === list.length ? 'ok' : 'warn' };
+  }
+  function loadCmdFlows() {
+    return api('GET', '/ems/command-flows').then(function (r) {
+      state.cmdFlows = r && r.ok ? r.status : null;
+      return !!(r && r.ok);
+    }).catch(function () { state.cmdFlows = null; return false; });
   }
   /** Flow-Rezepte: alle Befehle der App gruppiert, mit Hinweisen für bekannte Geräte. */
   function commandsHtml() {
     var list = (state.shadow && state.shadow.commands) || [];
     var out = '<p class="ems-why">' + esc(S.cmdIntro) + '</p><p class="ems-why">' + esc(S.cmdWhere) + '</p>'
-      + '<p class="ems-why">' + esc(S.cmdTagsLbl) + ': ' + esc('power (W), target_soc (%), discharge (W), amps (A), phases') + '</p><p class="ems-why">' + esc(S.cmdTestWhy) + '</p>';
+      + '<p class="ems-why">' + esc(S.cmdTagsLbl) + ': ' + esc('power (W), target_soc (%), discharge (W), amps (A), phases') + '</p><p class="ems-why">' + esc(S.cmdTestWhy) + '</p>'
+      + '<p class="ems-why">' + esc(S.cmdWhyCheck) + ' <button class="btn" data-ems-cmdcheck="1">' + esc(S.cmdCheck) + '</button></p>';
     if (!list.length) return out + '<p class="ems-why">' + esc(S.cmdNone) + '</p>';
     var groups = [];
     list.forEach(function (c) { if (groups.indexOf(c.group) < 0) groups.push(c.group); });
@@ -938,7 +984,7 @@
       var items = list.filter(function (c) { return c.group === g; });
       var hint = S['cmdHint_' + g];
       return '<div class="ems-box" style="margin:6px 0"><b>' + esc(items[0].groupTitle) + '</b>'
-        + '<ul style="margin:6px 0 4px 18px;padding:0">' + items.map(function (c) { return '<li>' + esc(c.title) + ' <button class="btn" data-ems-cmdtest="' + esc(c.id) + '">' + esc(S.cmdTest) + '</button></li>'; }).join('') + '</ul>'
+        + '<ul style="margin:6px 0 4px 18px;padding:0">' + items.map(function (c) { return '<li>' + esc(c.title) + cmdBadge(c.id) + ' <button class="btn" data-ems-cmdtest="' + esc(c.id) + '">' + esc(S.cmdTest) + '</button></li>'; }).join('') + '</ul>'
         + (hint ? '<p class="ems-why">' + esc(hint) + '</p>' : '') + '</div>';
     }).join('');
   }
@@ -1723,22 +1769,22 @@
     var miss = missingRequired();
     if (head) head.innerHTML = (miss.length ? '<span class="st-open"></span>' : '<span class="st-check">✓</span>') + esc(S.devicesSec);
     var src = SOURCES.map(function (s) {
-      return listRow('src-' + s.key, s.icon, s.color, S[s.label], tagHtml(srcTag(s)), srcSummary(s), srcBody(s));
+      return listRow('src-' + s.key, s.icon, s.color, S[s.label], tagHtml(srcTag(s)) + (s.key === 'bat' && state.cfg.battery && state.cfg.battery.deviceId ? cmdRowBadge('battery.') : ''), srcSummary(s), srcBody(s));
     }).join('');
     var rows = state.rows.map(function (r, i) {
       var name = r.kind === 'charger' ? S.wallbox + (r.name ? ' (' + r.name + ')' : '') : (r.name || S.consumers.charAt(0) + S.consumers.slice(1).toLowerCase());
       var pr = prioRank(i);
-      return listRow('row' + i, rowIcon(r), rowColor(r), name, (pr ? '<span class="ems-tag ems-tag-prio">' + esc(S.prioTag.replace('{n}', pr)) + '</span>' : '') + (r.kind === 'consumer' ? prioArrows(i) : ''), { text: rowSub(r), cls: r.deviceId && r.control !== false ? 'ok' : 'muted' }, rowBody(r, i));
+      return listRow('row' + i, rowIcon(r), rowColor(r), name, (pr ? '<span class="ems-tag ems-tag-prio">' + esc(S.prioTag.replace('{n}', pr)) + '</span>' : '') + (r.kind === 'consumer' ? prioArrows(i) : '') + cmdRowBadge(r.kind === 'charger' ? 'charger.' : 'consumer.' + r.deviceId + '.'), { text: rowSub(r), cls: r.deviceId && r.control !== false ? 'ok' : 'muted' }, rowBody(r, i));
     }).join('');
     host.innerHTML = styleHtml()
       + setupHeadHtml()
       + '<p class="lbl">' + esc(S.sources) + '</p><div class="ems-list">' + src + '</div>'
       + '<p class="lbl">' + esc(S.consumers) + '</p><div class="ems-list">' + rows
       + '<div class="ems-item ems-add" data-ems-add="1"><span class="ems-ic" style="background:var(--st-seg-bg);color:var(--st-text)">' + icon('plus', 17) + '</span><span class="ems-item-n">' + esc(S.addConsumer) + '</span></div></div>'
-      + '<p class="lbl">' + esc(S.sgTitle) + '</p><div class="ems-list">' + listRow('sg', 'boiler', '#e67e22', S.sgRow, '', sgSummary(), sgBody()) + '</div>'
-      + '<p class="lbl">' + esc(S.dhwTitle) + '</p><div class="ems-list">' + listRow('dhw', 'drop', '#2980b9', S.dhwRow, '', dhwSummary(), dhwBody()) + '</div>'
-      + '<p class="lbl">' + esc(S.fuseTitle) + '</p><div class="ems-list">' + listRow('fuse', 'bolt', '#c0392b', S.fuseRow, '', fuseSummary(), fuseBody()) + '</div>'
-      + '<p class="lbl">' + esc(S.cmdLabel) + '</p><div class="ems-list">' + listRow('cmd', 'bolt', '#8e44ad', S.cmdRow, '', { text: (((state.shadow && state.shadow.commands) || []).length) + '', cls: 'muted' }, commandsHtml()) + '</div>'
+      + '<p class="lbl">' + esc(S.sgTitle) + '</p><div class="ems-list">' + listRow('sg', 'boiler', '#e67e22', S.sgRow, cmdRowBadge('sgready.'), sgSummary(), sgBody()) + '</div>'
+      + '<p class="lbl">' + esc(S.dhwTitle) + '</p><div class="ems-list">' + listRow('dhw', 'drop', '#2980b9', S.dhwRow, cmdRowBadge('dhw.'), dhwSummary(), dhwBody()) + '</div>'
+      + '<p class="lbl">' + esc(S.fuseTitle) + '</p><div class="ems-list">' + listRow('fuse', 'bolt', '#c0392b', S.fuseRow, cmdRowBadge('shed.'), fuseSummary(), fuseBody()) + '</div>'
+      + '<p class="lbl">' + esc(S.cmdLabel) + '</p><div class="ems-list">' + listRow('cmd', 'bolt', '#8e44ad', S.cmdRow, '', cmdSummary(), commandsHtml(), true) + '</div>'
       + '<p class="lbl">' + esc(S.paLabel) + '</p><div class="ems-list">' + listRow('learn', 'target', '#16a085', S.paRow, '', planAccuracySummary(), planAccuracyHtml(), true) + '</div>'
       + '<p class="lbl">' + esc(S.calcTitle) + '</p><div class="ems-list">' + listRow('calc', 'clock', '#6b7280', S.calcRow, '', { text: calcSummary(), cls: 'muted' }, calcBody()) + '</div>'
       + '<p><button class="ems-save" id="ems-savebtn" data-ems-save="1">' + esc(state.dirty ? S.saveDirty : S.save) + '</button></p><p class="sub" id="ems-msg">' + esc(state.msg) + '</p>';
@@ -3083,6 +3129,15 @@
     var logDev = up(t, 'data-ems-logdev');
     if (logDev) { state.logDev = logDev === '*' ? '' : logDev; renderMain(); return; }
     if (up(t, 'data-ems-logmore')) { state.logMore = !state.logMore; renderMain(); return; }
+    if (up(t, 'data-ems-cmdcheck')) {
+      var chkBox = $('ems-msg');
+      if (chkBox) chkBox.textContent = S.cmdChecking;
+      loadCmdFlows().then(function (okc) {
+        if (chkBox) chkBox.textContent = okc ? '' : S.cmdCheckFail;
+        sync(); renderSetup();
+      });
+      return;
+    }
     var cmdTest = up(t, 'data-ems-cmdtest');
     if (cmdTest) {
       var cmdBox = $('ems-msg');
@@ -3314,6 +3369,7 @@
       load(),
       api('GET', '/ems/devices').then(function (r) { state.devices = r.devices || []; state.devicesAt = Date.now(); }).catch(function () { state.devices = []; }),
       api('GET', '/ems/flows').then(function (r) { state.flows = (r && r.flows) || []; }).catch(function () { state.flows = []; }),
+      loadCmdFlows(),
     ]).then(function () {
       render(); renderCompare(); startTimer();
       // Mit Energiemanagement-Gerät ist EMS die erste Ansicht unter «Einrichten»
