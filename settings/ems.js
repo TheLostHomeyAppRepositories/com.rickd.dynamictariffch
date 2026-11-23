@@ -944,7 +944,7 @@
   /** Kleines Abzeichen an einer Zeile (Batterie, Wallbox, Verbraucher …): alle Befehle mit diesem Anfang haben einen Flow? Sonst der schlechteste Zustand. */
   function cmdRowBadge(prefix) {
     if (!state.cmdFlows) return '';
-    var ids = ((state.shadow && state.shadow.commands) || []).filter(function (c) { return c.id.indexOf(prefix) === 0; }).map(function (c) { return c.id; });
+    var ids = Object.keys(state.cmdFlows).filter(function (id) { return id.indexOf(prefix) === 0; });
     if (!ids.length) return '';
     var rank = { ok: 0, empty: 1, off: 2, broken: 3, missing: 4 };
     var worst = 'ok';

@@ -97,3 +97,13 @@ test('Anzeige: Badge je Befehl und je Zeile (Batterie, Verbraucher), Zusammenfas
   assert.match(html, /margin-right:4px"><\/span>Flow<\/span>/, 'Zeile Entfeuchter: alles in Ordnung, kurz');
   assert.match(html, /3\/5 mit Flow/, 'Zusammenfassung');
 });
+
+test('Auslöser ohne Befehl (Warmwasser-Soll): Flow vorhanden, ausgeschaltet oder fehlt', () => {
+  const { triggerFlowStatus } = require('../lib/ems/commandFlows'); // eslint-disable-line global-require
+  const card = 'homey:app:com.rickd.dynamictariffch:ems_dhw_setpoint';
+  const std = { s: { id: 's', name: 'WP', enabled: true, trigger: { id: card }, actions: [{}] } };
+  assert.equal(triggerFlowStatus('ems_dhw_setpoint', std, {}).state, 'ok');
+  assert.equal(triggerFlowStatus('ems_dhw_setpoint', { s: { ...std.s, enabled: false } }, {}).state, 'off');
+  assert.equal(triggerFlowStatus('ems_dhw_setpoint', {}, { a: { id: 'a', name: 'X', enabled: true, cards: { c: { type: 'trigger', id: card, outputSuccess: ['y'] } } } }).state, 'ok');
+  assert.equal(triggerFlowStatus('ems_dhw_setpoint', {}, {}).state, 'missing');
+});
