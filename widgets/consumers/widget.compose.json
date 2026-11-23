@@ -23,6 +23,14 @@
       "method": "POST",
       "path": "/pause"
     },
+    "postCarSolarOnly": {
+      "method": "POST",
+      "path": "/car-solar-only"
+    },
+    "postCarTomorrowOff": {
+      "method": "POST",
+      "path": "/car-tomorrow-off"
+    },
     "postArm": {
       "method": "POST",
       "path": "/arm"

@@ -32,6 +32,21 @@ module.exports = {
     return { ok: true };
   },
 
+  async postCarSolarOnly({ homey, body }) {
+    const ems = homey.app && homey.app.ems;
+    if (!ems || !ems.hasDevice()) throw new Error('Energiemanagement nicht bereit');
+    // Schalter «Nur Solar» an = Netz nachladen aus
+    await ems.setCarGridCharge(!(body && body.on === true));
+    return { ok: true };
+  },
+
+  async postCarTomorrowOff({ homey, body }) {
+    const ems = homey.app && homey.app.ems;
+    if (!ems || !ems.hasDevice()) throw new Error('Energiemanagement nicht bereit');
+    await ems.setCarTomorrowOff(body && body.on === true);
+    return { ok: true };
+  },
+
   async postArm({ homey, body }) {
     const ems = homey.app && homey.app.ems;
     if (!ems || !ems.hasDevice()) throw new Error('Energiemanagement nicht bereit');

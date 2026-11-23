@@ -121,7 +121,15 @@
         + (sub.length ? '<div class="sub" style="white-space:normal">' + sub.join(' · ') + '</div>' : '')
         // «Sofort laden» nur, wenn das Auto angesteckt ist (sonst gibt es nichts zu laden)
         + (car.connected ? '<div class="item" style="padding:6px 0 0;border:none"><span class="body" style="font-weight:600">' + esc(Homey.__('consumersWidget.chargeNow')) + '</span>' + testChip + '</div>' : '')
+        + (car.controls ? '<div style="display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px">'
+          + carSwitch(Homey, 'solar', car.controls.solarOnly, 'consumersWidget.carSolarOnly', 'consumersWidget.carSolarOnlyHint')
+          + carSwitch(Homey, 'tomorrow', car.controls.tomorrowOff, 'consumersWidget.carTomorrowOff', 'consumersWidget.carTomorrowOffHint') + '</div>' : '')
         + '</div>';
+    }
+
+    function carSwitch(Homey, key, on, label, hint) {
+      return '<label style="display:inline-flex;align-items:center;gap:7px;font-size:12px;cursor:pointer" title="' + esc(Homey.__(hint)) + '">'
+        + '<span class="sw"><input type="checkbox" data-car="' + key + '"' + (on ? ' checked' : '') + '><span class="slider"></span></span>' + esc(Homey.__(label)) + '</label>';
     }
 
     function pauseSwitch(Homey, mod, paused) {
@@ -248,6 +256,14 @@
           if (!confirmed(b)) return;
           b.disabled = true;
           Homey.api('POST', '/start-module', { module: b.getAttribute('data-mod') }).then(function () { load(Homey); }).catch(function () { b.disabled = false; });
+        });
+      });
+      root.querySelectorAll('input[data-car]').forEach(function (inp) {
+        inp.addEventListener('change', function () {
+          var on = inp.checked;
+          inp.disabled = true;
+          var path = inp.getAttribute('data-car') === 'solar' ? '/car-solar-only' : '/car-tomorrow-off';
+          Homey.api('POST', path, { on: on }).then(function () { load(Homey); }).catch(function () { inp.disabled = false; inp.checked = !on; });
         });
       });
       root.querySelectorAll('input[data-pause]').forEach(function (inp) {
