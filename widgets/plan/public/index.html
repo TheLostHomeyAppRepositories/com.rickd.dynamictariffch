@@ -37,7 +37,7 @@
     .dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; background: var(--pw-normal); }
     .line b { font-weight: 600; white-space: nowrap; }
     .line .r { color: var(--pw-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-    .chart { position: relative; margin-top: 8px; height: 70px; display: flex; align-items: flex-end; gap: 1px; cursor: pointer; }
+    .chart { position: relative; margin-top: 3px; height: 70px; display: flex; align-items: flex-end; gap: 1px; cursor: pointer; }
     .bar { flex: 1 1 0; min-width: 0; border-radius: 1px 1px 0 0; }
     .bar.sel { outline: 2px solid var(--pw-accent); outline-offset: 0; }
     .bar.now { outline: 2px solid var(--pw-text); outline-offset: 0; }
@@ -45,7 +45,7 @@
     .mid span { position: absolute; top: -1px; left: 3px; font-size: 9.5px; color: var(--pw-muted); white-space: nowrap; }
     .scale { position: absolute; left: 0; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: space-between; font-size: 9.5px; color: var(--pw-muted); pointer-events: none; }
     .scale span { background: var(--pw-bg); padding: 0 2px; border-radius: 3px; opacity: .9; }
-    .pv { position: relative; height: 62px; margin-top: 3px; }
+    .pv { position: relative; height: 62px; margin-top: 12px; }
     .pv svg { position: absolute; left: 0; right: 0; bottom: 0; top: 14px; width: 100%; height: calc(100% - 14px); }
     .pv .lbl { position: absolute; left: 0; top: 0; font-size: 9.5px; color: var(--pw-muted); background: var(--pw-bg); padding: 0 2px; border-radius: 3px; opacity: .9; }
     .band { display: flex; gap: 1px; height: 7px; margin-top: 3px; }
@@ -135,7 +135,7 @@
       var midIdx = -1;
       d.slots.forEach(function (s, i) { if (midIdx < 0 && s.tomorrow) midIdx = i; });
       var mid = midIdx > 0 ? '<div class="mid" style="left:' + (midIdx / n * 100).toFixed(2) + '%"><span>' + esc(Homey.__('planWidget.tomorrow')) + '</span></div>' : '';
-      html += '<div class="chart" id="chart">' + bars + mid + '<div class="scale"><span>' + f1(d.max) + '</span><span>' + f1(d.min) + '</span></div></div>';
+      html += '<div class="blbl" style="margin-top:8px">' + esc(Homey.__('planWidget.priceTitle')) + '</div><div class="chart" id="chart">' + bars + mid + '<div class="scale"><span>' + f1(d.max) + '</span><span>' + f1(d.min) + '</span></div></div>';
 
       if (d.pvMaxKw) {
         var pts = ['0,100'];
@@ -145,7 +145,7 @@
         });
         pts.push(n + ',100');
         html += '<div class="pv"><svg viewBox="0 0 ' + n + ' 100" preserveAspectRatio="none"><polygon points="' + pts.join(' ') + '" fill="var(--pw-pv)" fill-opacity=".28" stroke="var(--pw-pv)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>'
-          + '<span class="lbl">PV ' + f1(d.pvMaxKw) + ' kW · ' + f1(d.pvKwh) + ' kWh</span></div>';
+          + '<span class="lbl">' + esc(Homey.__('planWidget.pvTitle')) + ' · max ' + f1(d.pvMaxKw) + ' kW · ' + f1(d.pvKwh) + ' kWh</span></div>';
       }
       if (d.hasBattery) {
         html += '<div class="blbl">' + esc(Homey.__('planWidget.battery')) + '</div><div class="band">' + d.slots.map(function (s) { return '<i style="background:' + (s.bat ? COLS[s.bat] || COLS.normal : 'transparent') + '"></i>'; }).join('') + '</div>';

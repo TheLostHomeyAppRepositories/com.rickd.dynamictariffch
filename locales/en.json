@@ -91,6 +91,8 @@
     "now": "now",
     "test": "Test mode",
     "off": "EMS off",
+    "priceTitle": "Price (Rp./kWh)",
+    "pvTitle": "PV forecast",
     "battery": "Battery",
     "charger": "Wallbox",
     "carNow": "charging now until {to}",
