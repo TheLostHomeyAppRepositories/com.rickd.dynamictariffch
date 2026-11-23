@@ -1042,7 +1042,8 @@
     var total = wins.length + 1;
     var days = Math.max.apply(null, wins.map(function (w) { return w.days; }).concat([pa.pv ? pa.pv.days : 0]));
     if (!judged) return { text: S.paSumWait.replace('{n}', days).replace('{m}', pa.needed), cls: 'muted' };
-    var better = wins.filter(function (w) { return !!w.better; }).length + (pa.pv && pa.pv.better ? 1 : 0);
+    // «verbessern» heisst: die ALTERNATIVE ist klar besser. Gewinnt die heutige Methode (mean/plain), ist nichts zu verbessern.
+    var better = wins.filter(function (w) { return w.better === 'robust'; }).length + (pa.pv && pa.pv.better === 'nowcast' ? 1 : 0);
     return better ? { text: S.paSumBetter.replace('{k}', better).replace('{t}', total), cls: 'ok' } : { text: S.paSumNone, cls: 'muted' };
   }
 

@@ -576,6 +576,23 @@ test('Setup: Box «Lernbericht» zeigt Fehler beider Methoden, die bessere und �
   assert.match(html, /Solar: Rest des Tages ab 10:30<\/td><td>7<\/td><td>35\.2 %<\/td><td>22\.5 %<\/td><td class="ems-ok">mit Morgen-Korrektur<\/td>/);
 });
 
+test('Setup: Lernbericht zählt nur Prognosen, bei denen die Alternative besser ist (nicht, wenn die heutige Methode gewinnt)', async () => {
+  const win = (key, mean, robust, better) => ({
+    key, from: 5, to: 10, days: 6, actualKwh: 4, mean: { errPct: mean, biasPct: 0 }, robust: { errPct: robust, biasPct: 0 }, better,
+  });
+  const env = await start(scenario({
+    shadow: {
+      planAccuracy: {
+        needed: 5,
+        load: { windows: [win('m', 17.7, 17.6, null), win('d', 12.4, 18.6, 'mean'), win('e', 15.8, 23.4, 'mean')] },
+        pv: { days: 3, plain: null, nowcast: null, better: null },
+      },
+    },
+  }));
+  assert.match(setup(env), /LERNBERICHT.*Plan-Genauigkeit.*Die heutigen Methoden sind gut genug/s);
+  assert.doesNotMatch(setup(env), /lassen sich verbessern/);
+});
+
 // ---------------------------------------------------------------- Ausblick Hausanschluss
 
 const outlookShadow = {
