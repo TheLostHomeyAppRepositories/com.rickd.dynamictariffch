@@ -166,6 +166,8 @@
     "dhwDelayed": "Verzögert bis {time} (PV zuerst)",
     "sgStart": "SG-Ready jetzt starten",
     "dhwStart": "Warmwasser jetzt bereiten",
+    "dhwSetpointWarn": "Soll nicht zurück: {actual} °C statt {expected} °C",
+    "confirmStart": "Wirklich starten?",
     "moduleOff": "Aus",
     "pauseOn": "Läuft automatisch. Ausschalten pausiert und beendet einen laufenden Lauf.",
     "pauseOff": "Pausiert: startet nicht. Einschalten gibt wieder frei.",

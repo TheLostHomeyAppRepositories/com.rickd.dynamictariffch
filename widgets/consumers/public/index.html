@@ -163,6 +163,7 @@
       if (dh.reason && !dh.paused) sub.push(esc(dh.reason));
       if (dh.delayUntilHm && !dh.paused) sub.push(esc(fill(Homey.__('consumersWidget.dhwDelayed'), { time: dh.delayUntilHm })));
       if (dh.untilHm && !dh.paused) sub.push(esc(fill(Homey.__('consumersWidget.sgUntil'), { time: dh.untilHm })));
+      if (dh.setpointWarn) sub.push('<span style="color:#d32f2f;font-weight:600">' + esc(fill(Homey.__('consumersWidget.dhwSetpointWarn'), { actual: dh.setpointWarn.actual, expected: dh.setpointWarn.expected })) + '</span>');
       return '<div class="car">'
         + '<div class="name" style="margin-bottom:3px"><span class="ic" style="width:18px;height:18px;background:none;color:var(--cw-muted)">' + icon('drop') + '</span>' + esc(Homey.__('consumersWidget.dhwTitle')) + testChip + '</div>'
         + '<div class="top"><span class="soc" style="font-size:15px">' + state + '</span>' + (temp ? '<span class="badge">' + temp + '</span>' : '') + pauseSwitch(Homey, 'dhw', dh.paused) + '</div>'
@@ -220,14 +221,26 @@
       if (!d.consumers.length) html += '<div class="msg">' + esc(Homey.__('consumersWidget.none')) + '</div>';
       else html += '<div class="list">' + d.consumers.map(function (c) { return consumerHtml(Homey, c); }).join('') + '</div>';
       root.innerHTML = html;
+      // Zwei-Stufen-Bestätigung (Widgets dürfen keinen Dialog öffnen): erster Druck fragt nach, der zweite startet; nach 6 s zurück
+      function confirmed(b) {
+        if (b.getAttribute('data-armed') === '1') return true;
+        var orig = b.textContent;
+        b.setAttribute('data-armed', '1');
+        b.textContent = Homey.__('consumersWidget.confirmStart');
+        b.style.outline = '2px solid #d98a1a';
+        setTimeout(function () { b.removeAttribute('data-armed'); b.textContent = orig; b.style.outline = ''; }, 6000);
+        return false;
+      }
       root.querySelectorAll('button[data-id]').forEach(function (b) {
         b.addEventListener('click', function () {
+          if (!confirmed(b)) return;
           b.disabled = true;
           Homey.api('POST', '/start', { id: b.getAttribute('data-id') }).then(function () { load(Homey); }).catch(function () { b.disabled = false; });
         });
       });
       root.querySelectorAll('button[data-mod]').forEach(function (b) {
         b.addEventListener('click', function () {
+          if (!confirmed(b)) return;
           b.disabled = true;
           Homey.api('POST', '/start-module', { module: b.getAttribute('data-mod') }).then(function () { load(Homey); }).catch(function () { b.disabled = false; });
         });
