@@ -119,7 +119,8 @@
         + '<div class="top"><span class="soc">' + (car.soc === null ? '–' : car.soc + '%') + '</span><span class="badge">' + badge + '</span></div>'
         + '<div class="sub" style="white-space:normal">' + esc(car.reason || '') + '</div>'
         + (sub.length ? '<div class="sub" style="white-space:normal">' + sub.join(' · ') + '</div>' : '')
-        + '<div class="item" style="padding:6px 0 0;border:none"><span class="body" style="font-weight:600">' + esc(Homey.__('consumersWidget.chargeNow')) + '</span>' + testChip + '</div>'
+        // «Sofort laden» nur, wenn das Auto angesteckt ist (sonst gibt es nichts zu laden)
+        + (car.connected ? '<div class="item" style="padding:6px 0 0;border:none"><span class="body" style="font-weight:600">' + esc(Homey.__('consumersWidget.chargeNow')) + '</span>' + testChip + '</div>' : '')
         + '</div>';
     }
 
