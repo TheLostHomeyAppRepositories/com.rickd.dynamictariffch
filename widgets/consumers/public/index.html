@@ -199,6 +199,11 @@
           + '<span class="slider"></span></label>';
       }
       var testChip = !c.live ? '<span class="chip">' + esc(Homey.__('consumersWidget.test')) + '</span>' : '';
+      // Fernbedienung aus / Tür offen als Hinweis (nur, was nicht schon als Grund oben steht)
+      var hints = [];
+      if (c.isProgram && c.remote && c.remote.ok === false && c.blocked !== 'remote') hints.push(esc(Homey.__('consumersWidget.remoteOff')));
+      if (c.isProgram && c.door && c.door.ok === false && c.blocked !== 'door') hints.push(esc(Homey.__('consumersWidget.doorOpen')));
+      if (hints.length) extra.push('<span style="color:#d98a1a;font-weight:600">' + hints.join(' · ') + '</span>');
       var subHtml = '<span class="sub">' + sub + (extra.length ? ' · ' + extra.join(' · ') : '') + '</span>';
       if (c.isProgram) {
         // Eigene Reihe, statt wie bei den übrigen Verbrauchern neben dem Namen: Automatik-Schalter und

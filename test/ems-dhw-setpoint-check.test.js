@@ -141,3 +141,15 @@ test('Widget: Warnung «Soll nicht zurück» nur bei Wiederholung oder Fehlschla
   assert.deepEqual(mk({ state: 'failed', expected: 48, actual: 52, tries: 3 }).setpointWarn, { expected: 48, actual: 52, state: 'failed' });
   assert.equal(mk({ state: 'retry', expected: 48, actual: 52, tries: 1 }).setpointWarn.state, 'retry');
 });
+
+test('Widget: Fernbedienung und Tür des Programm-Verbrauchers werden mitgegeben', () => {
+  const { consumersWidget } = require('../lib/WidgetData'); // eslint-disable-line global-require
+  const w = consumersWidget({
+    shadow: { deviceExists: true, silent: false, config: { silent: false, consumers: [{ id: 'g', name: 'GWA', enabled: true, mode: 'program', live: true, program: { durationH: 3, maxWaitH: 4 } }, { id: 'h', name: 'Heizung', enabled: true, mode: 'surplus', live: true }] } },
+    consumerCurrent: [{ id: 'g', reason: 'x', blocked: 'state', remote: { value: 'Disabled', ok: false }, door: null }, { id: 'h', remote: { value: 'a', ok: false } }],
+    tz: 'Europe/Zurich',
+  });
+  assert.deepEqual(w.consumers[0].remote, { value: 'Disabled', ok: false });
+  assert.equal(w.consumers[0].door, null);
+  assert.equal(w.consumers[1].remote, null, 'nur bei Programm-Verbrauchern');
+});

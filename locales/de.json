@@ -166,6 +166,8 @@
     "dhwDelayed": "Verzögert bis {time} (PV zuerst)",
     "sgStart": "SG-Ready jetzt starten",
     "dhwStart": "Warmwasser jetzt bereiten",
+    "remoteOff": "Fernbedienung aus",
+    "doorOpen": "Tür offen",
     "dhwSetpointWarn": "Soll nicht zurück: {actual} °C statt {expected} °C",
     "confirmStart": "Wirklich starten?",
     "moduleOff": "Aus",

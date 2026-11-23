@@ -581,3 +581,21 @@ test('Runner: läuft die Automatik ohne Start ab, wird der Rückruf «Automatik 
   assert.match(expired[0].reason, /Automatik abgelaufen/);
   assert.equal(st.programArmed, false);
 }));
+
+test('Runner: Fernbedienung und Tür als eigene Angabe (auch wenn der Status zuerst abweist); unbekannt ist null; ohne Capability nichts', async () => {
+  // Maschine aus (Status «Off»), Fernbedienung aus, Tür offen: der Grund nennt den Status, die Angaben zeigen alle drei Punkte
+  const a = makeRunner({ remote: 'Disabled', door: 'Open', state: 'Off', stateIdleValue: 'Ready to Start' });
+  await a.runner.tickCharger(at(19));
+  const row = a.runner.consumerCurrent[0];
+  assert.equal(row.blocked, 'state');
+  assert.deepEqual(row.remote, { value: 'Disabled', ok: false });
+  assert.deepEqual(row.door, { value: 'Open', ok: false });
+  // alles in Ordnung
+  const b = makeRunner({ remote: 'Enabled', door: 'Closed' });
+  await b.runner.tickCharger(at(19));
+  assert.deepEqual(b.runner.consumerCurrent[0].remote, { value: 'Enabled', ok: true });
+  // Wert nicht lesbar
+  const c = makeRunner({ remote: null, door: 'Closed' });
+  await c.runner.tickCharger(at(19));
+  assert.deepEqual(c.runner.consumerCurrent[0].remote, { value: null, ok: null });
+});

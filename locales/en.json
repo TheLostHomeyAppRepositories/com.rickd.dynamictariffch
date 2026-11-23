@@ -166,6 +166,8 @@
     "dhwDelayed": "Delayed until {time} (PV first)",
     "sgStart": "Start SG Ready now",
     "dhwStart": "Heat hot water now",
+    "remoteOff": "Remote control off",
+    "doorOpen": "Door open",
     "dhwSetpointWarn": "Setpoint not restored: {actual} °C instead of {expected} °C",
     "confirmStart": "Really start?",
     "moduleOff": "Off",
