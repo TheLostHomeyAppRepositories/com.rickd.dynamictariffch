@@ -73,6 +73,7 @@
       cmdTest: 'Testen', cmdTestSent: 'Befehl ausgegeben:', cmdTestFail: 'Befehl fehlgeschlagen:', cmdTestWhy: 'Mit «Testen» gibst du den Befehl einmal von Hand aus, auch im Testmodus, um deinen Flow zu prüfen (Werte vorsichtig: die Batterie bekommt keinen Ladeauftrag über den aktuellen Stand).',
       cmdLabel: 'Flow-Rezepte', cmdRow: 'Befehle der App an deine Geräte', cmdTagsLbl: 'Tags',
       cmdFlowOk: 'Flow vorhanden', cmdFlowMissing: 'Kein Flow', cmdFlowOff: 'Flow ist ausgeschaltet', cmdFlowBroken: 'Flow ist defekt', cmdFlowEmpty: 'Flow ohne Aktion',
+      ctrlMissing: 'Steuerung fehlt', devMissing: 'Gerät fehlt',
       cmdCheck: 'Flows neu prüfen', cmdChecking: 'Prüfe Flows …', cmdCheckFail: 'Flows konnten nicht geprüft werden', cmdSummary: 'mit Flow', cmdWhyCheck: 'Der Punkt zeigt, ob ein eingeschalteter Flow auf den Befehl wartet (Auslöser «Das Energiemanagement gibt einen Befehl»).',
       cmdIntro: 'Die App schaltet fremde Geräte nicht selbst: Homey erlaubt Apps nicht, Karten anderer Geräte auszuführen. Stattdessen gibt sie Befehle aus. Lege je Befehl einen Flow an: WENN «Das Energiemanagement gibt den Befehl …», DANN die Karte deines Geräts (egal welche Marke). Die Werte stehen als Tags zur Verfügung. Befehle gibt es nur live, im Testmodus werden sie nur protokolliert.',
       cmdWhere: 'Neuer Flow, WENN, App «Energiemanagement», Karte «Das Energiemanagement gibt einen Befehl», Befehl wählen.',
@@ -300,6 +301,7 @@
       cmdTest: 'Test', cmdTestSent: 'Command sent:', cmdTestFail: 'Command failed:', cmdTestWhy: 'With "Test" you give the command once by hand, also in test mode, to check your flow (careful values: the battery gets no charge order above the current level).',
       cmdLabel: 'Flow recipes', cmdRow: 'Commands of the app to your devices', cmdTagsLbl: 'Tags',
       cmdFlowOk: 'Flow found', cmdFlowMissing: 'No flow', cmdFlowOff: 'Flow is switched off', cmdFlowBroken: 'Flow is broken', cmdFlowEmpty: 'Flow without action',
+      ctrlMissing: 'Control missing', devMissing: 'Device missing',
       cmdCheck: 'Check flows again', cmdChecking: 'Checking flows …', cmdCheckFail: 'Flows could not be checked', cmdSummary: 'with a flow', cmdWhyCheck: 'The dot shows whether an enabled flow waits for the command (trigger "The energy management gives a command").',
       cmdIntro: 'The app does not switch other devices itself: Homey does not allow apps to run the cards of other devices. It gives commands instead. Add one flow per command: WHEN "The energy management gives the command ...", THEN the card of your device (any brand). The values are available as tags. Commands only go out live; in test mode they are only logged.',
       cmdWhere: 'New flow, WHEN, app "Energy management", card "The energy management gives a command", choose the command.',
@@ -958,6 +960,12 @@
     // in der Zeile kurz halten (sonst bricht sie um): bei «in Ordnung» nur «Flow», sonst der Zustand
     var txt = worst === 'ok' ? 'Flow' : m[1] + (bad && ids.length > 1 ? ' (' + bad + '/' + ids.length + ')' : '');
     return '<span class="ems-tag" style="background:var(--st-chip-bg);color:var(--st-text);white-space:nowrap" title="' + esc(S.cmdWhyCheck) + '"><span class="st-dot ' + m[0] + '" style="display:inline-block;width:7px;height:7px;margin-right:4px"></span>' + esc(txt) + '</span>';
+  }
+  /** Orangenes Abzeichen, wenn bei einer Zeile die Steuerung noch nicht gewählt ist (neuer Verbraucher ohne Gerät/Flow, Wallbox ohne Gerät). Reine Kostenzähler (control false) bleiben ohne Warnung. */
+  function rowMissingBadge(r) {
+    var txt = r.kind === 'charger' ? (!r.deviceId ? S.devMissing : '') : (r.control !== false && !r.deviceId ? S.ctrlMissing : '');
+    if (!txt) return '';
+    return '<span class="ems-tag" style="background:var(--st-chip-bg);color:var(--st-text);white-space:nowrap"><span class="st-dot warn" style="display:inline-block;width:7px;height:7px;margin-right:4px"></span>' + esc(txt) + '</span>';
   }
   /** Zusammenfassung für die Zeile «Flow-Rezepte»: wie viele Befehle haben einen Flow? */
   function cmdSummary() {
@@ -1775,7 +1783,7 @@
     var rows = state.rows.map(function (r, i) {
       var name = r.kind === 'charger' ? S.wallbox + (r.name ? ' (' + r.name + ')' : '') : (r.name || S.consumers.charAt(0) + S.consumers.slice(1).toLowerCase());
       var pr = prioRank(i);
-      return listRow('row' + i, rowIcon(r), rowColor(r), name, (pr ? '<span class="ems-tag ems-tag-prio">' + esc(S.prioTag.replace('{n}', pr)) + '</span>' : '') + (r.kind === 'consumer' ? prioArrows(i) : '') + cmdRowBadge(r.kind === 'charger' ? 'charger.' : 'consumer.' + r.deviceId + '.'), { text: rowSub(r), cls: r.deviceId && r.control !== false ? 'ok' : 'muted' }, rowBody(r, i));
+      return listRow('row' + i, rowIcon(r), rowColor(r), name, (pr ? '<span class="ems-tag ems-tag-prio">' + esc(S.prioTag.replace('{n}', pr)) + '</span>' : '') + (r.kind === 'consumer' ? prioArrows(i) : '') + rowMissingBadge(r) + (r.deviceId ? cmdRowBadge(r.kind === 'charger' ? 'charger.' : 'consumer.' + r.deviceId + '.') : ''), { text: rowSub(r), cls: r.deviceId && r.control !== false ? 'ok' : 'muted' }, rowBody(r, i));
     }).join('');
     host.innerHTML = styleHtml()
       + setupHeadHtml()
