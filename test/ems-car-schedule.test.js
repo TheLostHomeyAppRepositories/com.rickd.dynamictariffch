@@ -262,3 +262,45 @@ test('carPlan: Abfahrt weit hinter den bekannten Preisen - nur den Anteil der be
   const soon = carPlan({ schedule: weekdays(true), nowMs: tue(18), tz: TZ, soc: 40, capacityKwh: 60, powerKw: 11, slots: slots() });
   assert.ok(!soon.plan.patient);
 });
+
+// ---------------------------------------------------------------- Auf neue Preise warten (Abfahrt hinter den bekannten Preisen, aber unter 12 h)
+
+/** Preise bis Mitternacht wie am echten Tag (23.11.2026): tags um 27 Rp., abends fallend bis 22.5 Rp. */
+function knownToMidnight(from) {
+  const evening = { 22: [29.67, 28.63, 27, 25.7], 23: [25.3, 24.97, 24, 22.49] };
+  const out = [];
+  for (let t = from; t < tue(24); t += Q) {
+    const lp = new Date(t);
+    const h = Number(lp.toLocaleString('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false }));
+    const q = Math.floor(Number(lp.toLocaleString('en-GB', { timeZone: TZ, minute: '2-digit' })) / 15);
+    const price = evening[h] ? evening[h][q] : (h === 12 && q >= 2 ? 27.3 : 30 + (h % 5));
+    out.push({ start: t, end: t + Q, price });
+  }
+  return out;
+}
+
+test('carPlan: Preise reichen nicht bis zur Abfahrt - jetzt nur klar günstige Viertelstunden (bis 10 % über der günstigsten), den Rest später', () => {
+  const known = knownToMidnight(tue(10, 45));
+  const r = carPlan({ schedule: weekdays(true), nowMs: tue(10, 45), tz: TZ, soc: 40, capacityKwh: 52, powerKw: 11.04, slots: known });
+  assert.equal(r.state, 'planned');
+  assert.ok(r.plan.patient, 'nicht alles jetzt');
+  const prices = r.starts.map((t) => known.find((s) => s.start === t).price);
+  assert.ok(prices.every((p) => p <= 22.49 * 1.1 + 1e-9), `nur Preise bis 24.7 Rp.: ${prices}`);
+  assert.ok(!r.starts.includes(tue(12, 30)), 'das Mittagsloch (27 Rp.) ist nicht klar günstig');
+  assert.ok(r.starts.length < r.plan.need, 'der Rest folgt mit den neuen Preisen');
+  assert.match(r.reason, /Rest wenn neue Preise da sind/);
+});
+
+test('carPlan: ist die noch unbekannte Zeit zu kurz für den Rest, wird der Rest aus den bekannten Preisen erzwungen', () => {
+  // 12 h Bedarf (48 Viertelstunden) bei nur 6 h Frist hinter den bekannten Preisen (24 Viertelstunden unbekannt): 24 müssen jetzt gewählt werden
+  const known = knownToMidnight(tue(18));
+  const r = carPlan({ schedule: weekdays(true), nowMs: tue(18), tz: TZ, soc: 0, capacityKwh: 158, powerKw: 11.04, slots: known });
+  assert.ok(r.plan.need > 24 && r.plan.need <= 48, `Bedarf ${r.plan.need}`);
+  assert.ok(r.starts.length >= r.plan.need - 24, `mindestens 24 jetzt (nur 24 bekannt): ${r.starts.length}`);
+});
+
+test('carPlan: sind die Preise bis zur Abfahrt bekannt, gilt weiter die günstigsten Viertelstunden insgesamt', () => {
+  const r = carPlan({ schedule: weekdays(true), nowMs: tue(18), tz: TZ, soc: 40, capacityKwh: 60, powerKw: 11, slots: slots() });
+  assert.ok(!r.plan.patient);
+  assert.equal(r.starts.length, r.plan.need);
+});
