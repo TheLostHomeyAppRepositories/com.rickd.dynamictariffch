@@ -955,8 +955,9 @@
       if (rank[st] > rank[worst]) worst = st;
     });
     var m = { ok: ['ok', S.cmdFlowOk], empty: ['warn', S.cmdFlowEmpty], broken: ['alarm', S.cmdFlowBroken], off: ['warn', S.cmdFlowOff], missing: ['alarm', S.cmdFlowMissing] }[worst];
-    var txt = m[1] + (bad && ids.length > 1 ? ' (' + bad + '/' + ids.length + ')' : '');
-    return '<span class="ems-tag" style="background:var(--st-chip-bg);color:var(--st-text)" title="' + esc(S.cmdWhyCheck) + '"><span class="st-dot ' + m[0] + '" style="display:inline-block;width:7px;height:7px;margin-right:4px"></span>' + esc(txt) + '</span>';
+    // in der Zeile kurz halten (sonst bricht sie um): bei «in Ordnung» nur «Flow», sonst der Zustand
+    var txt = worst === 'ok' ? 'Flow' : m[1] + (bad && ids.length > 1 ? ' (' + bad + '/' + ids.length + ')' : '');
+    return '<span class="ems-tag" style="background:var(--st-chip-bg);color:var(--st-text);white-space:nowrap" title="' + esc(S.cmdWhyCheck) + '"><span class="st-dot ' + m[0] + '" style="display:inline-block;width:7px;height:7px;margin-right:4px"></span>' + esc(txt) + '</span>';
   }
   /** Zusammenfassung für die Zeile «Flow-Rezepte»: wie viele Befehle haben einen Flow? */
   function cmdSummary() {

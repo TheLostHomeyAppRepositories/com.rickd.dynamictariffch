@@ -94,6 +94,6 @@ test('Anzeige: Badge je Befehl und je Zeile (Batterie, Verbraucher), Zusammenfas
   assert.match(html, /Kein Flow/, 'fehlender Befehl');
   assert.match(html, /Flow ist ausgeschaltet/, 'ausgeschalteter Flow');
   assert.match(html, /Kein Flow \(2\/3\)/, 'Zeile Batterie: schlechtester Zustand mit Zahl');
-  assert.match(html, /Flow vorhanden<\/span><\/span>/, 'Zeile Entfeuchter: alles in Ordnung');
+  assert.match(html, /margin-right:4px"><\/span>Flow<\/span>/, 'Zeile Entfeuchter: alles in Ordnung, kurz');
   assert.match(html, /3\/5 mit Flow/, 'Zusammenfassung');
 });
