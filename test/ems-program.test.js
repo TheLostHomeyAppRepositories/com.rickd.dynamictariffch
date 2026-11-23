@@ -599,3 +599,16 @@ test('Runner: Fernbedienung und Tür als eigene Angabe (auch wenn der Status zue
   await c.runner.tickCharger(at(19));
   assert.deepEqual(c.runner.consumerCurrent[0].remote, { value: null, ok: null });
 });
+
+test('Status «Ready To Start» (Gerät) gilt als bereit, auch wenn «Ready to Start» eingestellt ist; andere Werte weiterhin nicht', () => {
+  const p = normalizeProgram({
+    enabled: true, remoteCapability: 'measure_remoteControl', stateCapability: 'measure_applianceState', stateIdleValue: 'Ready to Start', windowFrom: '00:00', maxWaitH: 4, minSurplusW: 100, startSustainS: 0,
+  });
+  const run = (stateValue) => decideProgram({
+    cfg: p, st: { programArmed: true }, remoteValue: 'Enabled', doorValue: null, stateValue, exportW: 3000, slots: [], nowMs: at(19),
+  });
+  assert.notEqual(run('Ready To Start').blocked, 'state');
+  assert.notEqual(run('  ready to start ').blocked, 'state');
+  assert.equal(run('Off').blocked, 'state');
+  assert.equal(run(null).blocked, 'state');
+});
