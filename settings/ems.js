@@ -73,7 +73,7 @@
       cmdTest: 'Testen', cmdTestSent: 'Befehl ausgegeben:', cmdTestFail: 'Befehl fehlgeschlagen:', cmdTestWhy: 'Mit «Testen» gibst du den Befehl einmal von Hand aus, auch im Testmodus, um deinen Flow zu prüfen (Werte vorsichtig: die Batterie bekommt keinen Ladeauftrag über den aktuellen Stand).',
       cmdLabel: 'Flow-Rezepte', cmdRow: 'Befehle der App an deine Geräte', cmdTagsLbl: 'Tags',
       cmdFlowOk: 'Flow vorhanden', cmdFlowMissing: 'Kein Flow', cmdFlowOff: 'Flow ist ausgeschaltet', cmdFlowBroken: 'Flow ist defekt', cmdFlowEmpty: 'Flow ohne Aktion',
-      ctrlMissing: 'Steuerung fehlt', devMissing: 'Gerät fehlt',
+      ctrlMissing: 'Steuerung fehlt', devMissing: 'Gerät fehlt', cmdSending: 'sendet …', cmdSent: 'Befehl ausgegeben', cmdChecked: 'Flows geprüft',
       cmdCheck: 'Flows neu prüfen', cmdChecking: 'Prüfe Flows …', cmdCheckFail: 'Flows konnten nicht geprüft werden', cmdSummary: 'mit Flow', cmdWhyCheck: 'Der Punkt zeigt, ob ein eingeschalteter Flow auf den Befehl wartet (Auslöser «Das Energiemanagement gibt einen Befehl»).',
       cmdIntro: 'Die App schaltet fremde Geräte nicht selbst: Homey erlaubt Apps nicht, Karten anderer Geräte auszuführen. Stattdessen gibt sie Befehle aus. Lege je Befehl einen Flow an: WENN «Das Energiemanagement gibt den Befehl …», DANN die Karte deines Geräts (egal welche Marke). Die Werte stehen als Tags zur Verfügung. Befehle gibt es nur live, im Testmodus werden sie nur protokolliert.',
       cmdWhere: 'Neuer Flow, WENN, App «Energiemanagement», Karte «Das Energiemanagement gibt einen Befehl», Befehl wählen.',
@@ -301,7 +301,7 @@
       cmdTest: 'Test', cmdTestSent: 'Command sent:', cmdTestFail: 'Command failed:', cmdTestWhy: 'With "Test" you give the command once by hand, also in test mode, to check your flow (careful values: the battery gets no charge order above the current level).',
       cmdLabel: 'Flow recipes', cmdRow: 'Commands of the app to your devices', cmdTagsLbl: 'Tags',
       cmdFlowOk: 'Flow found', cmdFlowMissing: 'No flow', cmdFlowOff: 'Flow is switched off', cmdFlowBroken: 'Flow is broken', cmdFlowEmpty: 'Flow without action',
-      ctrlMissing: 'Control missing', devMissing: 'Device missing',
+      ctrlMissing: 'Control missing', devMissing: 'Device missing', cmdSending: 'sending …', cmdSent: 'Command sent', cmdChecked: 'Flows checked',
       cmdCheck: 'Check flows again', cmdChecking: 'Checking flows …', cmdCheckFail: 'Flows could not be checked', cmdSummary: 'with a flow', cmdWhyCheck: 'The dot shows whether an enabled flow waits for the command (trigger "The energy management gives a command").',
       cmdIntro: 'The app does not switch other devices itself: Homey does not allow apps to run the cards of other devices. It gives commands instead. Add one flow per command: WHEN "The energy management gives the command ...", THEN the card of your device (any brand). The values are available as tags. Commands only go out live; in test mode they are only logged.',
       cmdWhere: 'New flow, WHEN, app "Energy management", card "The energy management gives a command", choose the command.',
@@ -974,6 +974,21 @@
     var ok = list.filter(function (c) { return state.cmdFlows[c.id] && state.cmdFlows[c.id].state === 'ok'; }).length;
     return { text: ok + '/' + list.length + ' ' + S.cmdSummary, cls: ok === list.length ? 'ok' : 'warn' };
   }
+  /** Rückmeldung direkt neben dem Knopf (id = Befehl oder '_check'), verschwindet nach ms wieder. */
+  function cmdNote(id, text, cls, ms) {
+    state.cmdMsg = state.cmdMsg || {};
+    state.cmdMsg[id] = { text: text, cls: cls };
+    sync(); renderSetup();
+    if (ms) {
+      setTimeout(function () {
+        if (state.cmdMsg && state.cmdMsg[id] && state.cmdMsg[id].text === text) { delete state.cmdMsg[id]; sync(); renderSetup(); }
+      }, ms);
+    }
+  }
+  function cmdNoteHtml(id) {
+    var m = state.cmdMsg && state.cmdMsg[id];
+    return m ? ' <span class="ems-' + m.cls + '">' + esc(m.text) + '</span>' : '';
+  }
   function loadCmdFlows() {
     return api('GET', '/ems/command-flows').then(function (r) {
       state.cmdFlows = r && r.ok ? r.status : null;
@@ -985,7 +1000,7 @@
     var list = (state.shadow && state.shadow.commands) || [];
     var out = '<p class="ems-why">' + esc(S.cmdIntro) + '</p><p class="ems-why">' + esc(S.cmdWhere) + '</p>'
       + '<p class="ems-why">' + esc(S.cmdTagsLbl) + ': ' + esc('power (W), target_soc (%), discharge (W), amps (A), phases') + '</p><p class="ems-why">' + esc(S.cmdTestWhy) + '</p>'
-      + '<p class="ems-why">' + esc(S.cmdWhyCheck) + ' <button class="btn" data-ems-cmdcheck="1">' + esc(S.cmdCheck) + '</button></p>';
+      + '<p class="ems-why">' + esc(S.cmdWhyCheck) + ' <button class="btn" data-ems-cmdcheck="1">' + esc(S.cmdCheck) + '</button>' + cmdNoteHtml('_check') + '</p>';
     if (!list.length) return out + '<p class="ems-why">' + esc(S.cmdNone) + '</p>';
     var groups = [];
     list.forEach(function (c) { if (groups.indexOf(c.group) < 0) groups.push(c.group); });
@@ -993,7 +1008,7 @@
       var items = list.filter(function (c) { return c.group === g; });
       var hint = S['cmdHint_' + g];
       return '<div class="ems-box" style="margin:6px 0"><b>' + esc(items[0].groupTitle) + '</b>'
-        + '<ul style="margin:6px 0 4px 18px;padding:0">' + items.map(function (c) { return '<li>' + esc(c.title) + cmdBadge(c.id) + ' <button class="btn" data-ems-cmdtest="' + esc(c.id) + '">' + esc(S.cmdTest) + '</button></li>'; }).join('') + '</ul>'
+        + '<ul style="margin:6px 0 4px 18px;padding:0">' + items.map(function (c) { return '<li>' + esc(c.title) + cmdBadge(c.id) + ' <button class="btn" data-ems-cmdtest="' + esc(c.id) + '">' + esc(S.cmdTest) + '</button>' + cmdNoteHtml(c.id) + '</li>'; }).join('') + '</ul>'
         + (hint ? '<p class="ems-why">' + esc(hint) + '</p>' : '') + '</div>';
     }).join('');
   }
@@ -3140,21 +3155,19 @@
     if (logDev) { state.logDev = logDev === '*' ? '' : logDev; renderMain(); return; }
     if (up(t, 'data-ems-logmore')) { state.logMore = !state.logMore; renderMain(); return; }
     if (up(t, 'data-ems-cmdcheck')) {
-      var chkBox = $('ems-msg');
-      if (chkBox) chkBox.textContent = S.cmdChecking;
+      cmdNote('_check', S.cmdChecking, 'muted');
       loadCmdFlows().then(function (okc) {
-        if (chkBox) chkBox.textContent = okc ? '' : S.cmdCheckFail;
-        sync(); renderSetup();
+        cmdNote('_check', okc ? S.cmdChecked : S.cmdCheckFail, okc ? 'ok' : 'bad', 6000);
       });
       return;
     }
     var cmdTest = up(t, 'data-ems-cmdtest');
     if (cmdTest) {
-      var cmdBox = $('ems-msg');
-      api('POST', '/ems/command-test', { id: cmdTest }).then(function (r) {
-        if (cmdBox) cmdBox.textContent = S.cmdTestSent + ' ' + ((r && r.title) || cmdTest);
+      cmdNote(cmdTest, S.cmdSending, 'muted');
+      api('POST', '/ems/command-test', { id: cmdTest }).then(function () {
+        cmdNote(cmdTest, '✓ ' + S.cmdSent, 'ok', 20000);
       }).catch(function (e) {
-        if (cmdBox) cmdBox.textContent = S.cmdTestFail + ' ' + ((e && e.message) || cmdTest);
+        cmdNote(cmdTest, '✗ ' + S.cmdTestFail + ' ' + ((e && e.message) || ''), 'bad', 30000);
       });
       return;
     }

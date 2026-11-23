@@ -138,3 +138,35 @@ test('Anzeige: «Steuerung fehlt» bei neuem Verbraucher ohne Gerät, «Gerät f
   assert.equal((html.match(/Steuerung fehlt/g) || []).length, 1, 'nur der neue Verbraucher, nicht der Kostenzähler');
   assert.equal((html.match(/Gerät fehlt/g) || []).length, 1, 'Wallbox ohne Gerät');
 });
+
+test('Anzeige: «Testen» zeigt die Rückmeldung direkt neben dem Knopf (erfolgreich und fehlgeschlagen)', async () => {
+  const fs = require('node:fs'); // eslint-disable-line global-require
+  const path = require('node:path'); // eslint-disable-line global-require
+  const vm = require('node:vm'); // eslint-disable-line global-require
+  const { normalizeConfig } = require('../lib/ems/Config'); // eslint-disable-line global-require
+  const emsJs = fs.readFileSync(path.join(__dirname, '../settings/ems.js'), 'utf8');
+  const els = new Map();
+  const handlers = {};
+  const el = (id) => { if (!els.has(id)) els.set(id, { id, innerHTML: '', textContent: '', value: '', checked: false, hidden: false, classList: { contains: () => true, toggle() {} }, addEventListener: (t, f) => { handlers[`${id}:${t}`] = f; } }); return els.get(id); };
+  const ctx = { document: { getElementById: el }, window: {}, setInterval: () => 0, setTimeout: () => 0, console, Object, Promise, Date, Number, isFinite, String, JSON, Math };
+  vm.createContext(ctx);
+  vm.runInContext(emsJs, ctx);
+  const config = normalizeConfig({ enabled: true, devices: { meter: { id: 'em' } } });
+  const commands = [{ id: 'battery.hold', title: 'Batterie: halten', group: 'battery', groupTitle: 'Batterie' }, { id: 'battery.normal', title: 'Batterie: Normalbetrieb', group: 'battery', groupTitle: 'Batterie' }];
+  let fail = false;
+  const res = {
+    'GET /ems/shadow': { enabled: true, deviceExists: true, shadow: true, config, pv: {}, current: null, charger: { current: null }, commands },
+    'GET /ems/consumers': { current: [], events: [] },
+    'GET /ems/devices': { devices: [] }, 'GET /ems/flows': { flows: [] }, 'GET /meters': null,
+    'GET /ems/command-flows': { ok: true, status: {} },
+  };
+  await ctx.window.EmsUi.init((m, p) => (m === 'POST' && p === '/ems/command-test' ? (fail ? Promise.reject(new Error('Gerät antwortet nicht')) : Promise.resolve({ ok: true })) : Promise.resolve(res[`${m} ${p}`])), 'de');
+  const click = async (attr, val) => { handlers['ems-view-devices:click']({ target: { getAttribute: (n) => (n === attr ? val : null), parentNode: null } }); await new Promise((r) => setTimeout(r, 15)); };
+  await click('data-ems-open', 'cmd');
+  await click('data-ems-cmdtest', 'battery.hold');
+  assert.match(els.get('ems-view-devices').innerHTML, /data-ems-cmdtest="battery\.hold">Testen<\/button> <span class="ems-ok">✓ Befehl ausgegeben<\/span>/);
+  assert.doesNotMatch(els.get('ems-view-devices').innerHTML, /data-ems-cmdtest="battery\.normal">Testen<\/button> <span/, 'nur beim gedrückten Befehl');
+  fail = true;
+  await click('data-ems-cmdtest', 'battery.normal');
+  assert.match(els.get('ems-view-devices').innerHTML, /<span class="ems-bad">✗ Befehl fehlgeschlagen: Gerät antwortet nicht<\/span>/);
+});
