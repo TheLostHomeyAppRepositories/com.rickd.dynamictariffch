@@ -60,6 +60,7 @@ test('Widget «Energieplan»: 24 h ab jetzt über Mitternacht, Batteriemodus und
   assert.equal(d.silent, true);
   assert.equal(d.slots.length, 96);
   assert.equal(d.slots[0].time, '21:00');
+  assert.equal(d.nowIdx, 0, 'der vorderste Balken ist die laufende Viertelstunde (Widget markiert ihn)');
   assert.equal(d.slots[0].tomorrow, false);
   assert.equal(d.slots[12].time, '00:00');
   assert.equal(d.slots[12].tomorrow, true);
