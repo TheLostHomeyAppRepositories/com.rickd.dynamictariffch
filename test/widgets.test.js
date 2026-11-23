@@ -71,6 +71,17 @@ test('Widget «Energieplan»: 24 h ab jetzt über Mitternacht, Batteriemodus und
   assert.equal(d.min, 8);
   assert.equal(d.max, 25);
   assert.ok(d.ticks.some((t) => t.label === '0'));
+  assert.equal(d.charger.connected, null, 'ohne Angabe: unbekannt');
+  const mk = (connected) => planWidget({
+    plan: makePlan(),
+    shadow: {
+      deviceExists: true, config: cfg, current: { soc: 63.6, price: 25, mine: { mode: 'hold', reason: '' } }, charger: { current: { connected, mine: { mode: 'idle', reason: '' } } },
+    },
+    tz: TZ,
+    nowMs: NOW,
+  });
+  assert.equal(mk(false).charger.connected, false, 'nicht angesteckt: das Widget zeigt den Plan nur als Vorschau');
+  assert.equal(mk(true).charger.connected, true);
 });
 
 test('Widget «Energieplan»: ohne EMS-Gerät nur ein Hinweis, ohne Batterie und Wallbox keine Zeilen', () => {

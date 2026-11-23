@@ -97,6 +97,8 @@
     "carPlanned": "charging planned {from} to {to}",
     "carNone": "no charging planned",
     "carCharges": "Car charging",
+    "carUnplugged": "Car not plugged in",
+    "carPlanNote": "plan",
     "tomorrow": "tomorrow",
     "tapHint": "Tap a bar for details",
     "mode": {

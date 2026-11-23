@@ -97,6 +97,8 @@
     "carPlanned": "Laden geplant {from} bis {to}",
     "carNone": "kein Laden geplant",
     "carCharges": "E-Auto lädt",
+    "carUnplugged": "Auto nicht angesteckt",
+    "carPlanNote": "Plan",
     "tomorrow": "morgen",
     "tapHint": "Balken antippen für Details",
     "mode": {

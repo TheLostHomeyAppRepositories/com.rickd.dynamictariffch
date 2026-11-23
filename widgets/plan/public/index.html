@@ -123,7 +123,10 @@
         var w = d.charger.window;
         var txt = w ? (w.now ? Homey.__('planWidget.carNow').replace('{to}', w.to) : Homey.__('planWidget.carPlanned').replace('{from}', w.from).replace('{to}', w.to))
           : Homey.__('planWidget.carNone');
-        html += '<div class="line"><span class="dot" style="background:var(--pw-car)"></span><b>' + esc(Homey.__('planWidget.charger')) + '</b><span class="r">' + esc(txt) + '</span></div>';
+        var unplugged = d.charger.connected === false;
+        // nicht angesteckt: der Plan ist nur eine Vorschau, es wird nichts geladen
+        if (unplugged) txt = Homey.__('planWidget.carUnplugged') + (w ? ' · ' + Homey.__('planWidget.carPlanNote') + ' ' + w.from + '–' + w.to : '');
+        html += '<div class="line"><span class="dot" style="background:var(--pw-car)' + (unplugged ? ';opacity:.4' : '') + '"></span><b>' + esc(Homey.__('planWidget.charger')) + '</b><span class="r">' + esc(txt) + '</span></div>';
       }
 
       var bars = d.slots.map(function (s, i) {
@@ -152,7 +155,7 @@
         html += '<div class="blbl">' + esc(Homey.__('planWidget.battery')) + '</div><div class="band">' + d.slots.map(function (s) { return '<i style="background:' + (s.bat ? COLS[s.bat] || COLS.normal : 'transparent') + '"></i>'; }).join('') + '</div>';
       }
       if (d.hasCharger) {
-        html += '<div class="blbl">' + esc(Homey.__('planWidget.charger')) + '</div><div class="band">' + d.slots.map(function (s) { return '<i style="background:' + (s.car ? 'var(--pw-car)' : 'var(--pw-chip)') + '"></i>'; }).join('') + '</div>';
+        html += '<div class="blbl">' + esc(Homey.__('planWidget.charger')) + (d.charger && d.charger.connected === false ? ' (' + esc(Homey.__('planWidget.carUnplugged')) + ')' : '') + '</div><div class="band"' + (d.charger && d.charger.connected === false ? ' style="opacity:.4"' : '') + '>' + d.slots.map(function (s) { return '<i style="background:' + (s.car ? 'var(--pw-car)' : 'var(--pw-chip)') + '"></i>'; }).join('') + '</div>';
       }
       html += '<div class="ticks">' + d.ticks.map(function (t) { return '<span style="left:' + ((t.i + 0.5) / n * 100).toFixed(2) + '%">' + esc(t.label) + '</span>'; }).join('') + '</div>';
       html += '<div class="detail" id="detail">' + detailHtml(Homey, d, sel) + '</div>';
