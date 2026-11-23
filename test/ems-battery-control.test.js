@@ -30,28 +30,22 @@ test('detectPreset: erkennt die Vorlage an den Karten des Geräts, sonst null', 
   assert.equal(detectPreset(null), null);
 });
 
-test('buildCommands: Laden, Halten, Normal mit ersetzten Platzhaltern; Freigabe der Entladung nicht, solange das Auto lädt', () => {
+test('buildCommands: Laden, Halten, Normal als Befehle mit Werten; Entladung bleibt gesperrt, solange das Auto lädt', () => {
   const v = { power: 5000, target_soc: 90, normal_discharge: 7000 };
-  assert.deepEqual(buildCommands('luna2000', 'charge', v), [{ card: 'luna2000_start_force_charge', args: { power: 5000, target_soc: 90 }, skipped: false }]);
-  assert.deepEqual(buildCommands('luna2000', 'hold', v).map((c) => [c.card, c.args]), [['luna2000_stop_force_charge_discharge', {}], ['luna2000_set_max_discharge_power', { power: 0 }]]);
-  const normal = buildCommands('luna2000', 'normal', v);
-  assert.deepEqual(normal.map((c) => [c.card, c.args, c.skipped]), [
-    ['luna2000_stop_force_charge_discharge', {}, false],
-    ['luna2000_set_working_mode', { mode: '2' }, false],
-    ['luna2000_set_max_discharge_power', { power: 7000 }, false],
-  ]);
-  const car = buildCommands('luna2000', 'normal', v, { carCharging: true });
-  assert.equal(car[2].skipped, true, 'Batterie speist das Auto nicht');
-  assert.deepEqual(buildCommands('unbekannt', 'charge', v), []);
-  assert.deepEqual(buildCommands('luna2000', 'quatsch', v), []);
-  assert.equal(buildCommands('luna2000', 'charge', { power: 4999.6, target_soc: 89.6 })[0].args.power, 5000, 'gerundet');
+  assert.deepEqual(buildCommands('charge', v), [{ id: 'battery.charge', values: { power: 5000, target_soc: 90 }, locked: false }]);
+  assert.deepEqual(buildCommands('hold', v), [{ id: 'battery.hold', values: {}, locked: false }]);
+  assert.deepEqual(buildCommands('normal', v), [{ id: 'battery.normal', values: { discharge: 7000 }, locked: false }]);
+  const car = buildCommands('normal', v, { carCharging: true });
+  assert.deepEqual(car, [{ id: 'battery.normal', values: { discharge: 0 }, locked: true }], 'Batterie speist das Auto nicht: Entladegrenze 0');
+  assert.deepEqual(buildCommands('quatsch', v), []);
+  assert.equal(buildCommands('charge', { power: 4999.6, target_soc: 89.6 })[0].values.power, 5000, 'gerundet');
 });
 
 test('stepBatteryControl: erst beobachten, dann bei Wechsel senden, Laden/Halten wiederholen, Freigabe nachholen', () => {
   const st = makeBatteryControlState();
   assert.equal(stepBatteryControl({ st, mode: 'hold', nowMs: at(1), live: false }).send, false, 'erster Lauf beobachtet nur');
   assert.equal(stepBatteryControl({ st, mode: 'hold', nowMs: at(1, 5), live: false }).send, true, 'danach Start');
-  markSent(st, 'hold', at(1, 5), buildCommands('luna2000', 'hold', {}));
+  markSent(st, 'hold', at(1, 5), buildCommands('hold', {}));
   assert.equal(stepBatteryControl({ st, mode: 'hold', nowMs: at(1, 10), live: false }).send, false, 'gleicher Modus, noch keine Wiederholung');
   const rep = stepBatteryControl({ st, mode: 'hold', nowMs: at(1, 15), repeatMs: 10 * 60000, live: false });
   assert.equal(rep.send, true);
@@ -59,11 +53,11 @@ test('stepBatteryControl: erst beobachten, dann bei Wechsel senden, Laden/Halten
   markSent(st, 'hold', at(1, 15), []);
   assert.match(stepBatteryControl({ st, mode: 'charge', nowMs: at(1, 16), live: false }).reason, /Wechsel hold -> charge/);
   // Normal, während das Auto lädt: Freigabe fehlt, wird nachgeholt
-  markSent(st, 'normal', at(2), buildCommands('luna2000', 'normal', { normal_discharge: 7000 }, { carCharging: true }));
+  markSent(st, 'normal', at(2), buildCommands('normal', { normal_discharge: 7000 }, { carCharging: true }));
   assert.equal(st.pendingRestore, true);
   assert.equal(stepBatteryControl({ st, mode: 'normal', nowMs: at(2, 5), carCharging: true, live: false }).send, false);
   assert.equal(stepBatteryControl({ st, mode: 'normal', nowMs: at(2, 10), carCharging: false, live: false }).send, true);
-  markSent(st, 'normal', at(2, 10), buildCommands('luna2000', 'normal', { normal_discharge: 7000 }));
+  markSent(st, 'normal', at(2, 10), buildCommands('normal', { normal_discharge: 7000 }));
   assert.equal(st.pendingRestore, false);
   assert.equal(stepBatteryControl({ st, mode: 'normal', nowMs: at(5), live: false }).send, false, 'Normal wird nicht wiederholt');
   // Umschalten auf live: wieder zuerst beobachten
@@ -105,7 +99,7 @@ function setup({ silent = true, live = false, enabled = true, soc = 20, charging
     battery: { deviceId: 'bat', capacityKwh: 10, targetSoc: 90, chargePowerKw: 5, reserveHours: 6, control: { enabled, live, preset: 'luna2000' } },
   });
   const actuators = new Actuators({}, () => {});
-  actuators._runCard = async (id, args) => { sent.push([id, args]); };
+  actuators._fire = async (id, tokens) => { sent.push([id, tokens]); };
   const runner = new EmsRunner({
     getConfig: () => config, prices: prices(), pv: new PvFeed(null, () => {}, { get: async () => ({ slots: [], stale: true }) }),
     inputs: { battery: async () => ({ soc, capacityKwh: 10 }), compareBatteryPlan: async () => null },
@@ -123,17 +117,18 @@ test('Runner: Silent-Modus simuliert die Batteriesteuerung nur (Protokoll ja, Ka
   assert.equal(runner.batteryEvents.length, 1);
   assert.equal(runner.batteryEvents[0].mode, 'charge', 'nachts günstig: laden');
   assert.equal(runner.batteryEvents[0].live, false);
-  assert.deepEqual(runner.batteryEvents[0].cards, ['luna2000_start_force_charge']);
+  assert.deepEqual(runner.batteryEvents[0].cards, ['battery.charge']);
   assert.equal(runner.batteryControl.live, false);
 });
 
-test('Runner: live (Silent aus, Batterie live) sendet die Karten an das Batterie-Gerät', async () => {
+test('Runner: live (Silent aus, Batterie live) gibt den Befehl «Batterie laden» aus', async () => {
   const { runner, sent } = setup({ silent: false, live: true });
   await runner.tick(at(3));
   assert.deepEqual(sent, [], 'erster Lauf beobachtet');
   await runner.tick(at(3, 5));
   // Ziel 88 statt 90 %: der Fahrplan lädt nur so viel nach, wie die teure Zeit braucht
-  assert.deepEqual(sent, [['homey:device:bat:luna2000_start_force_charge', { power: 5000, target_soc: 88 }]]);
+  assert.deepEqual(sent.map((x) => [x[0], x[1].power, x[1].target_soc]), [['battery.charge', 5000, 88]]);
+  assert.equal(sent[0][1].title, 'Batterie: aus dem Netz laden');
   assert.equal(runner.batteryEvents[0].live, true);
 });
 
@@ -157,8 +152,7 @@ test('Runner: Ausschalten gibt die Batterie frei, wenn zuletzt Laden oder Halten
   await runner.tick(at(3, 5));
   sent.length = 0;
   await runner.releaseBattery(config, at(3, 6));
-  assert.deepEqual(sent.map((x) => x[0].split(':').pop()), ['luna2000_stop_force_charge_discharge', 'luna2000_set_working_mode', 'luna2000_set_max_discharge_power']);
-  assert.equal(sent[2][1].power, 7000);
+  assert.deepEqual(sent.map((x) => [x[0], x[1].discharge]), [['battery.normal', 7000]]);
   assert.match(runner.batteryEvents[runner.batteryEvents.length - 1].reason, /freigegeben/);
   sent.length = 0;
   assert.equal(await runner.releaseBattery(config, at(3, 7)), null, 'zuletzt Normal: nichts zu tun');
@@ -168,7 +162,7 @@ test('Runner: Ausschalten gibt die Batterie frei, wenn zuletzt Laden oder Halten
 test('Runner: ein fehlgeschlagener Befehl wird protokolliert und beim nächsten Lauf wiederholt', async () => {
   const { runner, sent } = setup({ silent: false, live: true });
   let fail = true;
-  runner.actuators._runCard = async (id, args) => { if (fail) throw new Error('Gerät antwortet nicht'); sent.push([id, args]); };
+  runner.actuators._fire = async (id, tokens) => { if (fail) throw new Error('Gerät antwortet nicht'); sent.push([id, tokens]); };
   await runner.tick(at(3));
   await runner.tick(at(3, 5));
   assert.match(runner.batteryEvents[0].error, /antwortet nicht/);
@@ -211,14 +205,15 @@ test('Anzeige: Silent-Schalter speichert; Batterie-Zeile mit Live-Schalter; Prot
   handlers['ems-view-devices:click']({ target: { getAttribute: (n) => (n === 'data-ems-open' ? 'src-bat' : null), parentNode: null } });
   await new Promise((r) => setTimeout(r, 15));
   const setup2 = els.get('ems-view-devices').innerHTML;
-  assert.match(setup2, /Vorlage für dieses Gerät erkannt/);
+  assert.match(setup2, /Die App gibt aus:/, 'Die Batterie-Befehle statt einer Karten-Zuordnung');
+  assert.match(setup2, /Batterie: aus dem Netz laden|battery.charge/);
   assert.match(setup2, /Normale Entladeleistung \(W\)/);
   assert.match(setup2, /Nur ein System darf die Batterie steuern/);
   assert.match(setup2, /id="ems-bc-on" type="checkbox" checked/);
   el('ems-bc-on').checked = true; // die Attrappe liest kein HTML: Zustand des gezeichneten Schalters nachbilden
   const body = ctx.window.EmsUi._collect().ems.battery;
   assert.equal(body.control.enabled, true);
-  assert.equal(body.control.preset, 'luna2000');
+  assert.equal(body.control.preset, undefined, 'keine Karten-Zuordnung mehr');
   assert.equal(body.control.live, undefined, 'live nur über den Schalter, nicht über Speichern');
 });
 

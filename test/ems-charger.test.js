@@ -146,31 +146,25 @@ test('Schattenmodus: Ist-Zustand wird aus der Messung übernommen, kein Anlauf-A
   assert.equal(st.currentAmps >= 6, true);
 });
 
-test('Wallbox-Befehle: Karten und Leistungs-Argument aus den Einstellungen, Standard bleibt der bisherige, leere Start-Karte = keine', async () => {
+test('Wallbox-Befehle: Auslöser «Wallbox: Ladeleistung setzen / Laden starten / Laden stoppen» mit Leistung, Strom und Phasen', async () => {
   const { Actuators } = require('../lib/ems/Actuators'); // eslint-disable-line global-require
   const a = new Actuators({}, () => {});
   const calls = [];
-  a._runCard = async (id, args) => {
-    calls.push([id, args]);
+  a._fire = async (id, tokens) => {
+    calls.push([id, tokens]);
   };
-  await a.charger('wb', { type: 'set', amps: 10, phases: 3 }, { live: true });
+  const r1 = await a.charger('wb', { type: 'set', amps: 10, phases: 3 }, { live: true });
   await a.charger('wb', { type: 'start' }, { live: true });
-  assert.deepEqual(calls, [
-    ['homey:device:wb:target_power_set', { target_power: 6900 }],
-    ['homey:device:wb:evcharger_charging_start', undefined],
-  ], 'Standard wie bisher');
+  const r3 = await a.charger('wb', { type: 'stop' }, { live: true });
+  assert.deepEqual(calls.map((c) => c[0]), ['charger.set', 'charger.start', 'charger.stop']);
+  assert.deepEqual([calls[0][1].power, calls[0][1].amps, calls[0][1].phases], [6900, 10, 3], 'Leistung = A x Phasen x 230 V');
+  assert.equal(calls[0][1].title, 'Wallbox: Ladeleistung setzen');
+  assert.equal(r1.watts, 6900);
+  assert.equal(r3.watts, 0, 'Stopp = 0 W');
   calls.length = 0;
-  const cards = { startCard: '', powerCard: 'set_watts', powerArg: 'watts' };
-  await a.charger('x', { type: 'set', amps: 6, phases: 1 }, { live: true, cards });
-  await a.charger('x', { type: 'start' }, { live: true, cards });
-  await a.charger('x', { type: 'stop' }, { live: true, cards });
-  assert.deepEqual(calls, [
-    ['homey:device:x:set_watts', { watts: 1380 }],
-    ['homey:device:x:set_watts', { watts: 0 }],
-  ], 'eigene Karte und Argument, ohne Start-Karte kein Start-Aufruf, Stopp = 0 W');
-  calls.length = 0;
-  await a.charger('x', { type: 'set', amps: 6, phases: 1 }, { live: false, cards });
-  assert.equal(calls.length, 0, 'Trockenlauf sendet nichts');
+  const dry = await a.charger('x', { type: 'set', amps: 6, phases: 1 }, { live: false });
+  assert.equal(calls.length, 0, 'Trockenlauf gibt nichts aus');
+  assert.equal(dry.watts, 1380);
 });
 
 test('Config: Anschluss der Wallbox (Capabilities, Karten, Argument) mit Standardwerten und leerem Start', () => {

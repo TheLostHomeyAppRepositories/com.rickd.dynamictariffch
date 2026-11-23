@@ -69,7 +69,19 @@
       srcCar: 'E-Auto', whyCar: 'Optional, empfohlen mit Wallbox. Mit dem Ladestand des Autos (aus der App deines Autos) kannst du Aufträge als «Ziel-Ladestand bis Uhrzeit» planen. Ohne läuft alles weiter, dann gibst du die Energie in kWh an.',
       carCap: 'Batteriegrösse des Autos (kWh)', carSocLbl: 'E-Auto', carNow: 'E-Auto jetzt', pvTargetSoc: 'Ziel-Ladestand (%, statt Energie)', pvNeedCarSoc: 'Der Ladestand des E-Autos ist unbekannt (Setup → E-Auto)', pvNeedCarCap: 'Batteriegrösse des E-Autos fehlt (Setup → E-Auto)',
       pvReachedAlready: 'Das Auto hat den Ziel-Ladestand schon erreicht', pvSocFrom: 'von', pvSocTo: 'auf', pvDayStrip: 'Vorschau im Tagesverlauf',
-      ctrlKind: 'Schalten über', ctrlViaDevice: 'Gerät (ein/aus)', ctrlViaFlow: 'Homey-Flows (ein und aus)', flowOnLbl: 'Flow zum Einschalten', flowOffLbl: 'Flow zum Ausschalten', flowNone: '- Flow wählen -', flowAdv: '(erweitert)',
+      cmdT: { 'battery.charge': 'Batterie: aus dem Netz laden', 'battery.hold': 'Batterie: halten (nicht entladen)', 'battery.normal': 'Batterie: Normalbetrieb', 'charger.start': 'Wallbox: Laden starten', 'charger.set': 'Wallbox: Ladeleistung setzen', 'charger.stop': 'Wallbox: Laden stoppen', 'sgready.normal': 'SG-Ready: Normalbetrieb', 'sgready.boost': 'SG-Ready: Empfehlung (Boost)', 'sgready.forced': 'SG-Ready: Zwangsladung', 'dhw.program': 'Warmwasser: Programm ein', 'dhw.normal': 'Warmwasser: zurück auf Normal', 'dhw.delay': 'Warmwasser: verzögern' },
+      cmdTest: 'Testen', cmdTestSent: 'Befehl ausgegeben:', cmdTestFail: 'Befehl fehlgeschlagen:', cmdTestWhy: 'Mit «Testen» gibst du den Befehl einmal von Hand aus, auch im Testmodus, um deinen Flow zu prüfen (Werte vorsichtig: die Batterie bekommt keinen Ladeauftrag über den aktuellen Stand).',
+      cmdLabel: 'Flow-Rezepte', cmdRow: 'Befehle der App an deine Geräte', cmdTagsLbl: 'Tags',
+      cmdIntro: 'Die App schaltet fremde Geräte nicht selbst: Homey erlaubt Apps nicht, Karten anderer Geräte auszuführen. Stattdessen gibt sie Befehle aus. Lege je Befehl einen Flow an: WENN «Das Energiemanagement gibt den Befehl …», DANN die Karte deines Geräts (egal welche Marke). Die Werte stehen als Tags zur Verfügung. Befehle gibt es nur live, im Testmodus werden sie nur protokolliert.',
+      cmdWhere: 'Neuer Flow, WENN, App «Energiemanagement», Karte «Das Energiemanagement gibt einen Befehl», Befehl wählen.',
+      cmdFires: 'Die App gibt aus:', cmdNone: 'Keine Befehle (noch nichts eingerichtet).', cmdOn: 'einschalten', cmdOff: 'ausschalten', cmdShed: 'Schutz', cmdHintHdr: 'So gehts',
+      cmdHint_battery: 'Laden: Karte deiner Batterie «Laden aus dem Netz» mit [power] und [target_soc]. Halten: Laden stoppen und die maximale Entladeleistung auf 0. Normal: Laden stoppen, Betriebsart Eigenverbrauch, maximale Entladeleistung auf [discharge]. Bei der Huawei LUNA2000: «Zwangsladen starten», «Zwangsladen stoppen», «Max. Entladeleistung», «Betriebsart».',
+      cmdHint_charger: 'Ladeleistung setzen: Karte deiner Wallbox mit [power] (Watt). Laden starten und Laden stoppen: die Karten der Wallbox dazu. Beim go-e: «Zielleistung setzen» mit [power], «Laden starten», «Laden stoppen».',
+      cmdHint_consumer: 'Schalte das Gerät mit seiner Karte ein oder aus, oder starte einen deiner Flows (Aktion «Flow starten»).',
+      cmdHint_sgready: 'Setze die Betriebsart deiner Wärmepumpe (SG-Ready) mit der passenden Karte oder schalte die Relais.',
+      cmdHint_dhw: 'Programm ein: Warmwasser-Soll erhöhen. Zurück auf Normal: Soll zurücksetzen. Verzögern: Soll absenken. Der Wert «Warmwasser-Soll» ist nur beim Auslöser «Der Warmwasser-Soll soll gesetzt werden» ein Tag.',
+      cmdHint_shed: 'Schalte das Gerät aus, das der Hausanschluss-Schutz abschalten soll.',
+      ctrlKind: 'Schalten über', ctrlViaDevice: 'Gerät (ein/aus)', ctrlViaFlow: 'Befehl an einen Flow (ein und aus)', flowOnLbl: 'Flow zum Einschalten', flowOffLbl: 'Flow zum Ausschalten', flowNone: '- Flow wählen -', flowAdv: '(erweitert)',
       flowHint: 'Der Flow braucht den Start-Trigger «Dieser Flow wird gestartet». Bei Flow-Steuerung kennt die App den Zustand des Verbrauchers nicht, sie rechnet mit dem, was sie selbst geschaltet hat.',
       flowsNone: 'Es wurden keine startbaren Flows gefunden.', assumedW: 'Leistung des Verbrauchers (W, für die Überschussrechnung)',
       pvReached: 'erreicht', pvReachedSoFar: 'bisher erreicht', pvForecastLeg: 'Prognose',
@@ -282,7 +294,19 @@
       srcCar: 'EV', whyCar: 'Optional, recommended with a charger. With the car\'s state of charge (from your car\'s app) you can plan jobs as "target charge by time". Without it everything keeps working, then you enter the energy in kWh.',
       carCap: 'Car battery size (kWh)', carSocLbl: 'EV', carNow: 'EV now', pvTargetSoc: 'Target charge (%, instead of energy)', pvNeedCarSoc: 'The EV charge level is unknown (Setup → EV)', pvNeedCarCap: 'Car battery size is missing (Setup → EV)',
       pvReachedAlready: 'The car has already reached the target charge', pvSocFrom: 'from', pvSocTo: 'to', pvDayStrip: 'Preview over the day',
-      ctrlKind: 'Switch via', ctrlViaDevice: 'Device (on/off)', ctrlViaFlow: 'Homey flows (on and off)', flowOnLbl: 'Flow to switch on', flowOffLbl: 'Flow to switch off', flowNone: '- choose flow -', flowAdv: '(advanced)',
+      cmdT: { 'battery.charge': 'Battery: charge from the grid', 'battery.hold': 'Battery: hold (do not discharge)', 'battery.normal': 'Battery: normal operation', 'charger.start': 'EV charger: start charging', 'charger.set': 'EV charger: set charging power', 'charger.stop': 'EV charger: stop charging', 'sgready.normal': 'SG Ready: normal operation', 'sgready.boost': 'SG Ready: recommendation (boost)', 'sgready.forced': 'SG Ready: forced charging', 'dhw.program': 'Hot water: program on', 'dhw.normal': 'Hot water: back to normal', 'dhw.delay': 'Hot water: delay' },
+      cmdTest: 'Test', cmdTestSent: 'Command sent:', cmdTestFail: 'Command failed:', cmdTestWhy: 'With "Test" you give the command once by hand, also in test mode, to check your flow (careful values: the battery gets no charge order above the current level).',
+      cmdLabel: 'Flow recipes', cmdRow: 'Commands of the app to your devices', cmdTagsLbl: 'Tags',
+      cmdIntro: 'The app does not switch other devices itself: Homey does not allow apps to run the cards of other devices. It gives commands instead. Add one flow per command: WHEN "The energy management gives the command ...", THEN the card of your device (any brand). The values are available as tags. Commands only go out live; in test mode they are only logged.',
+      cmdWhere: 'New flow, WHEN, app "Energy management", card "The energy management gives a command", choose the command.',
+      cmdFires: 'The app gives:', cmdNone: 'No commands (nothing set up yet).', cmdOn: 'switch on', cmdOff: 'switch off', cmdShed: 'Protection', cmdHintHdr: 'How to',
+      cmdHint_battery: 'Charge: card of your battery "charge from the grid" with [power] and [target_soc]. Hold: stop charging and set the maximum discharge power to 0. Normal: stop charging, working mode self-consumption, maximum discharge power to [discharge]. For the Huawei LUNA2000: "Start forced charge", "Stop forced charge", "Max discharge power", "Working mode".',
+      cmdHint_charger: 'Set charging power: card of your wallbox with [power] (watts). Start charging and stop charging: the matching wallbox cards. For go-e: "Set target power" with [power], "Start charging", "Stop charging".',
+      cmdHint_consumer: 'Switch the device on or off with its card, or start one of your flows (action "Start flow").',
+      cmdHint_sgready: 'Set the mode of your heat pump (SG Ready) with the matching card or switch the relays.',
+      cmdHint_dhw: 'Program on: raise the hot-water setpoint. Back to normal: reset the setpoint. Delay: lower the setpoint. The value "hot-water setpoint" is only a tag of the trigger "The hot-water setpoint should be set".',
+      cmdHint_shed: 'Switch off the device the house connection protection should switch off.',
+      ctrlKind: 'Switch via', ctrlViaDevice: 'Device (on/off)', ctrlViaFlow: 'Command to a flow (on and off)', flowOnLbl: 'Flow to switch on', flowOffLbl: 'Flow to switch off', flowNone: '- choose flow -', flowAdv: '(advanced)',
       flowHint: 'The flow needs the start trigger "This Flow is started". With flow control the app does not know the consumer\'s state, it works with what it switched itself.',
       flowsNone: 'No startable flows were found.', assumedW: 'Power of the consumer (W, for the surplus calculation)',
       pvReached: 'reached', pvReachedSoFar: 'reached so far', pvForecastLeg: 'Forecast',
@@ -634,44 +658,12 @@
   function batteryControlHtml() {
     var c = state.cfg;
     var bc = c.battery.control || {};
-    var cards = state.batteryCards;
     var html = '<div class="ems-box"><b>' + esc(S.batCtl) + '</b><div class="ems-row">' + check(S.batCtlOn, 'ems-bc-on', bc.enabled) + '</div>';
-    if (!cards) html += '<p class="ems-why">' + esc(S.batCtlLoading) + '</p>';
-    else if (!cards.preset && !(cards.cards || []).length) html += '<p class="ems-why ems-warn">' + esc(S.batCtlNoCards) + '</p>';
-    else if (!cards.preset || bc.preset === 'custom') {
-      html += cards.preset ? mapSelectHtml(bc, cards) : '<p class="ems-why">' + esc(S.batCtlNone) + '</p>';
-      if (bc.enabled) html += batteryValuesHtml(c, bc) + customMapHtml(bc, cards) + '<p class="ems-why ems-warn">' + esc(S.batCtlWarn) + '</p>';
-    } else {
-      html += '<p class="ems-why ems-ok">' + esc(S.batCtlFound) + '</p>' + mapSelectHtml(bc, cards);
-      if (bc.enabled) {
-        var vals = { power: Math.round(c.battery.chargePowerKw * 1000), target_soc: c.battery.targetSoc, normal_discharge: bc.normalDischargeW };
-        var argsOf = { luna2000_start_force_charge: { power: vals.power, target_soc: vals.target_soc }, luna2000_set_working_mode: { mode: '2' } };
-        var title = function (id, k) {
-          var t = cardTitle(cards, id);
-          var a = argsOf[id] || (id === 'luna2000_set_max_discharge_power' ? { power: k === 'hold' ? 0 : vals.normal_discharge } : null);
-          if (!a) return t;
-          var card = (cards.cards || []).filter(function (x) { return x.id === id; })[0] || {};
-          var names = [];
-          (card.title || '').replace(/\[\[([^\]]+)\]\]/g, function (m, n) { names.push(n); return m; });
-          var show = function (n) {
-            if (a[n] === undefined) return '…';
-            var arg = (card.args || []).filter(function (x) { return x.name === n; })[0];
-            var opt = arg && arg.values ? arg.values.filter(function (v) { return String(v.id) === String(a[n]); })[0] : null;
-            return opt ? opt.title : String(a[n]);
-          };
-          var i = 0;
-          return t.replace(/…/g, function () { return show(names[i++]); });
-        };
-        var steps = { charge: ['luna2000_start_force_charge'], hold: ['luna2000_stop_force_charge_discharge', 'luna2000_set_max_discharge_power'], normal: ['luna2000_stop_force_charge_discharge', 'luna2000_set_working_mode', 'luna2000_set_max_discharge_power'] };
-        html += batteryValuesHtml(c, bc)
-          + '<p class="ems-why"><b>' + esc(S.batCtlSteps) + '</b><br>'
-          + esc(S.batModeCharge) + ': ' + steps.charge.map(function (x) { return title(x, 'charge'); }).map(esc).join(', ') + '<br>'
-          + esc(S.batModeHold) + ': ' + steps.hold.map(function (x) { return title(x, 'hold'); }).map(esc).join(', ') + '<br>'
-          + esc(S.batModeNormal) + ': ' + steps.normal.map(function (x) { return title(x, 'normal'); }).map(esc).join(', ') + ' (' + esc(S.batCarSkip) + ')</p>'
-          + '<p class="ems-why ems-warn">' + esc(S.batCtlWarn) + '</p>';
-      }
-    }
-    return html + '</div>';
+    if (!bc.enabled) return html + '</div>';
+    return html + batteryValuesHtml(c, bc)
+      + cmdFiresHtml([['battery.charge', ''], ['battery.hold', ''], ['battery.normal', '']])
+      + '<p class="ems-why">' + esc(S.cmdHint_battery) + '</p>'
+      + '<p class="ems-why ems-warn">' + esc(S.batCtlWarn) + '</p></div>';
   }
 
   function cardTitle(cards, id) {
@@ -773,94 +765,6 @@
   function batteryValuesHtml(c, bc) {
     return '<div class="ems-row">' + field(S.batCtlNormal, 'ems-bc-normal', bc.normalDischargeW, 'number', ' step="100" min="0"') + field(S.batCtlRepeat, 'ems-bc-repeat', bc.repeatMin, 'number', ' step="1" min="2" max="60"') + '</div>';
   }
-  /** Erkannte Vorlage oder eigene Zuordnung (nur wenn eine Vorlage erkannt wurde). */
-  function mapSelectHtml(bc, cards) {
-    var cur = bc.preset === 'custom' ? 'custom' : cards.preset;
-    return '<div class="ems-row"><label class="ems-f"><span>' + esc(S.batCtlMap) + '</span><select data-ems-bcpreset="1">'
-      + '<option value="' + esc(cards.preset) + '"' + (cur !== 'custom' ? ' selected' : '') + '>' + esc(S.batCtlMapAuto) + '</option>'
-      + '<option value="custom"' + (cur === 'custom' ? ' selected' : '') + '>' + esc(S.batCtlMapCustom) + '</option></select></label></div>';
-  }
-  var BAT_MODES = ['charge', 'hold', 'normal'];
-  var MAX_BAT_STEPS = 4;
-  function customMap(bc) {
-    var m = bc.custom || {};
-    var out = {};
-    BAT_MODES.forEach(function (k) { out[k] = Array.isArray(m[k]) ? m[k] : []; });
-    return out;
-  }
-  /** Je Modus bis 4 Karten der Batterie mit ihren Argumenten. */
-  function customMapHtml(bc, cards) {
-    var map = customMap(bc);
-    var list = (cards.cards || []);
-    return BAT_MODES.map(function (mode) {
-      var steps = map[mode];
-      var rows = steps.map(function (st, i) {
-        var p = 'ems-bcc-' + mode + '-' + i;
-        var def = list.filter(function (x) { return x.id === st.card; })[0];
-        var opts = '<option value="">' + esc(S.batCtlPick) + '</option>' + list.map(function (k) { return '<option value="' + esc(k.id) + '"' + (k.id === st.card ? ' selected' : '') + '>' + esc(cardTitle(cards, k.id)) + '</option>'; }).join('');
-        var args = def ? (def.args || []).map(function (a) {
-          var v = st.args && st.args[a.name] !== undefined ? st.args[a.name] : '';
-          var lbl = '<span>' + esc(a.title || a.name) + '</span>';
-          if (a.type === 'dropdown' && a.values) {
-            return '<label class="ems-f">' + lbl + '<select id="' + p + '-a-' + esc(a.name) + '">' + a.values.map(function (o) { return '<option value="' + esc(o.id) + '"' + (String(v) === o.id ? ' selected' : '') + '>' + esc(o.title) + '</option>'; }).join('') + '</select></label>';
-          }
-          if (a.type === 'checkbox') return '<label class="ems-c"><input type="checkbox" id="' + p + '-a-' + esc(a.name) + '"' + (v === true ? ' checked' : '') + '> ' + lbl + '</label>';
-          return '<label class="ems-f">' + lbl + '<input type="text" id="' + p + '-a-' + esc(a.name) + '" value="' + esc(v) + '" style="width:130px"></label>';
-        }).join('') : '';
-        return '<div class="ems-box" style="margin:6px 0"><div class="ems-row"><label class="ems-f ems-wide"><span>' + (i + 1) + '.</span><select id="' + p + '-card" data-ems-bccard="1">' + opts + '</select></label>'
-          + '<button class="btn" data-ems-bcc="del:' + mode + ':' + i + '">' + esc(S.batCtlDel) + '</button></div>'
-          + (args ? '<div class="ems-row">' + args + '</div>' : '')
-          + (mode === 'normal' ? '<label class="ems-c"><span class="swt"><input class="sw" type="checkbox" id="' + p + '-skip"' + (st.skipWhenCarCharging ? ' checked' : '') + '><i></i></span> <span>' + esc(S.batCarSkip) + '</span></label>' : '')
-          + '</div>';
-      }).join('');
-      var name = mode === 'charge' ? S.batModeCharge : (mode === 'hold' ? S.batModeHold : S.batModeNormal);
-      return '<p class="lbl" style="margin-top:10px">' + esc(name.toUpperCase()) + '</p>' + (rows || '<p class="ems-why">' + esc(S.batCtlEmpty) + '</p>')
-        + (steps.length < MAX_BAT_STEPS ? '<button class="btn" data-ems-bcc="add:' + mode + '">' + esc(S.batCtlAddStep) + '</button>' : '');
-    }).join('') + '<p class="ems-why">' + esc(S.batCtlPh) + '</p>';
-  }
-  /** Eingaben der eigenen Zuordnung übernehmen (Zahlenfelder als Zahl, Platzhalter als Text). */
-  function syncCustomMap(bc) {
-    if (!$('ems-bcc-marker') && !state.batteryCards) return;
-    var cards = (state.batteryCards && state.batteryCards.cards) || [];
-    var map = customMap(bc);
-    BAT_MODES.forEach(function (mode) {
-      map[mode] = map[mode].map(function (st, i) {
-        var p = 'ems-bcc-' + mode + '-' + i;
-        if (!$(p + '-card')) return st;
-        var card = String($(p + '-card').value || '');
-        var def = cards.filter(function (x) { return x.id === card; })[0];
-        var args = {};
-        if (card === st.card && def) {
-          (def.args || []).forEach(function (a) {
-            var id = p + '-a-' + a.name;
-            if (!$(id)) return;
-            if (a.type === 'checkbox') { args[a.name] = chk(id); return; }
-            var v = String(val(id, '')).trim();
-            if (v === '') return;
-            if (a.type === 'number' && !/^\{\w+\}$/.test(v) && isFinite(Number(v))) args[a.name] = Number(v);
-            else args[a.name] = v;
-          });
-        }
-        return { card: card, args: args, skipWhenCarCharging: mode === 'normal' && chk(p + '-skip') };
-      });
-    });
-    bc.custom = map;
-  }
-
-  function loadBatteryCards() {
-    if (state.batteryCardsLoading || !state.cfg || !state.cfg.battery.deviceId) return;
-    state.batteryCardsLoading = true;
-    api('GET', '/ems/battery-cards').then(function (r) {
-      state.batteryCards = r || { preset: null, cards: [] };
-      state.batteryCardsLoading = false;
-      var bcl = state.cfg.battery.control;
-      // erkannte Vorlage übernehmen, ausser es ist bewusst eine eigene Zuordnung gewählt; ohne Vorlage: eigene Zuordnung
-      if (bcl && state.batteryCards.preset && bcl.preset !== 'custom') bcl.preset = state.batteryCards.preset;
-      else if (bcl && !state.batteryCards.preset && (state.batteryCards.cards || []).length) bcl.preset = 'custom';
-      renderSetup();
-    }).catch(function () { state.batteryCards = { preset: null, cards: [] }; state.batteryCardsLoading = false; renderSetup(); });
-  }
-
   var CAR_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   function carSchedule() {
     var c = state.cfg.car || {};
@@ -997,7 +901,6 @@
   function rowSub(r) {
     if (r.kind === 'charger') return r.deviceId ? (r.live ? S.modeLiveTag : S.modeTest) : S.notChosen;
     if (!r.control || !r.deviceId) return S.noCtrl;
-    if (r.controlKind === 'flow' && !(r.flowOn && r.flowOn.id)) return S.notChosen;
     var m = { full: S.modeFull, soc: S.modeSoc, surplus: S.modeSurplus }[r.mode] || r.mode;
     return m + ' - ' + (r.live ? S.modeLiveTag : S.modeTest);
   }
@@ -1009,6 +912,36 @@
   }
   function rowColor(r) { return r.kind === 'charger' ? COLORS.charger : (r.type === 'dehumidifier' ? COLORS.dehumidifier : COLORS.generic); }
 
+  /** Titel eines Befehls: aus der Befehlsliste der App, sonst aus Name und Art. */
+  function cmdName(id, name) {
+    var list = (state.shadow && state.shadow.commands) || [];
+    var f = list.filter(function (c) { return c.id === id; })[0];
+    if (f) return f.title;
+    if (S.cmdT && S.cmdT[id]) return S.cmdT[id];
+    var m = /\.(on|off)$/.exec(id);
+    if (/^consumer\./.test(id) && m) return (name || id) + ': ' + (m[1] === 'on' ? S.cmdOn : S.cmdOff);
+    if (/^shed\./.test(id)) return S.cmdShed + ': ' + (name || id) + ' ' + S.cmdOff;
+    return id;
+  }
+  function cmdFiresHtml(ids) {
+    return '<p class="ems-why">' + esc(S.cmdFires) + ' ' + ids.map(function (x) { return '<b>' + esc(cmdName(x[0], x[1])) + '</b>'; }).join(' · ') + '. ' + esc(S.cmdWhere) + '</p>';
+  }
+  /** Flow-Rezepte: alle Befehle der App gruppiert, mit Hinweisen für bekannte Geräte. */
+  function commandsHtml() {
+    var list = (state.shadow && state.shadow.commands) || [];
+    var out = '<p class="ems-why">' + esc(S.cmdIntro) + '</p><p class="ems-why">' + esc(S.cmdWhere) + '</p>'
+      + '<p class="ems-why">' + esc(S.cmdTagsLbl) + ': ' + esc('power (W), target_soc (%), discharge (W), amps (A), phases') + '</p><p class="ems-why">' + esc(S.cmdTestWhy) + '</p>';
+    if (!list.length) return out + '<p class="ems-why">' + esc(S.cmdNone) + '</p>';
+    var groups = [];
+    list.forEach(function (c) { if (groups.indexOf(c.group) < 0) groups.push(c.group); });
+    return out + groups.map(function (g) {
+      var items = list.filter(function (c) { return c.group === g; });
+      var hint = S['cmdHint_' + g];
+      return '<div class="ems-box" style="margin:6px 0"><b>' + esc(items[0].groupTitle) + '</b>'
+        + '<ul style="margin:6px 0 4px 18px;padding:0">' + items.map(function (c) { return '<li>' + esc(c.title) + ' <button class="btn" data-ems-cmdtest="' + esc(c.id) + '">' + esc(S.cmdTest) + '</button></li>'; }).join('') + '</ul>'
+        + (hint ? '<p class="ems-why">' + esc(hint) + '</p>' : '') + '</div>';
+    }).join('');
+  }
   function flowOptions(current) {
     var cur = current || { id: '' };
     var opts = '<option value="">' + esc(S.flowNone) + '</option>';
@@ -1081,16 +1014,6 @@
   // ------------------------------------------------------------ Anschluss der Wallbox (Capabilities und Flow-Karten)
   var WB_DEFAULT = { stateCapability: 'evcharger_charging_state', powerCapability: 'measure_power', phaseCapability: 'goe_measure_phase_switching', startCard: 'evcharger_charging_start', powerCard: 'target_power_set', powerArg: 'target_power' };
 
-  function loadChargerCards(devId) {
-    if (!devId || state.chargerCardsLoading || (state.chargerCards && state.chargerCards.deviceId === devId)) return;
-    state.chargerCardsLoading = true;
-    api('GET', '/ems/device-cards?id=' + encodeURIComponent(devId)).then(function (r) {
-      state.chargerCards = { deviceId: devId, cards: (r && r.cards) || [] };
-      state.chargerCardsLoading = false;
-      renderSetup();
-    }).catch(function () { state.chargerCards = { deviceId: devId, cards: [] }; state.chargerCardsLoading = false; renderSetup(); });
-  }
-
   function wbCardOpts(cards, current, allowNone) {
     var list = (cards || []).slice();
     var has = list.some(function (c) { return c.id === current; });
@@ -1101,35 +1024,22 @@
 
   function wbLinkBox(r, p) {
     var c = (state.cfg && state.cfg.charger) || {};
+    var keys = ['stateCapability', 'powerCapability', 'phaseCapability'];
     var cur = {};
-    Object.keys(WB_DEFAULT).forEach(function (k) { cur[k] = c[k] === undefined ? WB_DEFAULT[k] : c[k]; });
-    var isStd = Object.keys(WB_DEFAULT).every(function (k) { return cur[k] === WB_DEFAULT[k]; });
+    keys.forEach(function (k) { cur[k] = c[k] === undefined ? WB_DEFAULT[k] : c[k]; });
+    var isStd = keys.every(function (k) { return cur[k] === WB_DEFAULT[k]; });
     var devId = r.deviceId;
     if (!devId) return ''; // ohne gewähltes Gerät gibt es nichts zuzuordnen (und nichts, was beim Speichern überschrieben würde)
     state.wbShown = !!state.open[p.slice(0, -1)]; // nur wenn die Zeile aufgeklappt ist, steht der Bereich wirklich auf der Seite
-    var cards = devId && state.chargerCards && state.chargerCards.deviceId === devId ? state.chargerCards.cards : null;
-    if (devId && !cards) loadChargerCards(devId);
     var capSel = function (id, label, value, none, hint) {
       var opts = (none ? '<option value=""' + (value ? '' : ' selected') + '>' + esc(S.wbNone) + '</option>' : '') + capOptions(devId, /./, value);
       return '<label class="ems-f ems-wide"><span>' + esc(label) + (hint ? tipI(id) : '') + '</span><select id="' + id + '">' + opts + '</select></label>' + (devId && value ? curHtml(devId, value) : '') + (hint ? tipT(id, hint) : '');
     };
-    var pc = (cards || []).filter(function (x) { return x.id === cur.powerCard; })[0];
-    var numArgs = pc ? (pc.args || []).filter(function (a) { return a.type === 'number' || a.type === 'range'; }) : [];
-    var argOpts = numArgs.length ? numArgs.map(function (a) { return '<option value="' + esc(a.name) + '"' + (a.name === cur.powerArg ? ' selected' : '') + '>' + esc(a.title || a.name) + ' (' + esc(a.name) + ')</option>'; }).join('')
-      + (numArgs.some(function (a) { return a.name === cur.powerArg; }) ? '' : '<option value="' + esc(cur.powerArg) + '" selected>' + esc(cur.powerArg) + '</option>')
-      : '<option value="' + esc(cur.powerArg) + '" selected>' + esc(cur.powerArg) + '</option>';
     var body = '<p class="ems-why">' + esc(S.wbLinkWhy) + '</p>'
       + '<div class="ems-row">' + capSel('ems-wb-state', S.wbState, cur.stateCapability, false) + capSel('ems-wb-power', S.wbPower, cur.powerCapability, false) + '</div>'
       + '<div class="ems-row">' + capSel('ems-wb-phase', S.wbPhase, cur.phaseCapability, true, S.wbPhaseH) + '</div>'
-      + (cards === null && devId ? '<p class="ems-why">' + esc(S.wbCardsLoading) + '</p>' : '')
-      + '<div class="ems-row"><label class="ems-f ems-wide"><span>' + esc(S.wbStartCard) + '</span><select id="ems-wb-startcard">' + wbCardOpts(cards, cur.startCard, true) + '</select></label></div>'
-      + '<div class="ems-row"><label class="ems-f ems-wide"><span>' + esc(S.wbPowerCard) + '</span><select id="ems-wb-powercard" data-ems-sgdev="1">' + wbCardOpts(cards, cur.powerCard, false) + '</select></label>'
-      + '<label class="ems-f"><span>' + esc(S.wbPowerArg) + '</span><select id="ems-wb-powerarg">' + argOpts + '</select></label></div>'
-      + (cards && cards.length && !pc ? '<p class="warn">' + esc(S.wbNoPowerCard) + '</p>' : '');
-    // Fehlt die gewählte Karte am Gerät, ist der Bereich von Anfang an offen und die Titelzeile weist darauf hin
-    var attn = !!(cards && cards.length && !pc);
-    if (attn && state.open[p + 'link'] === undefined) state.open[p + 'link'] = true;
-    return '<details class="ems-adv"' + (state.open[p + 'link'] ? ' open' : '') + '><summary data-ems-adv="' + p + 'link">' + esc(S.wbLinkTitle) + ' · ' + esc(isStd ? S.wbStd : S.wbCustom) + (attn ? ' · <span class="ems-warn">⚠ ' + esc(S.wbCardMissing) + '</span>' : '') + '</summary>' + body + '</details>';
+      + cmdFiresHtml([['charger.set', ''], ['charger.start', ''], ['charger.stop', '']]);
+    return '<details class="ems-adv"' + (state.open[p + 'link'] ? ' open' : '') + '><summary data-ems-adv="' + p + 'link">' + esc(S.wbLinkTitle) + ' · ' + esc(isStd ? S.wbStd : S.wbCustom) + '</summary>' + body + '</details>';
   }
 
   /** Auswahl aus den Feldern in die Konfiguration übernehmen (nur wenn der Bereich gezeichnet ist). */
@@ -1139,9 +1049,6 @@
     c.stateCapability = val('ems-wb-state', c.stateCapability) || WB_DEFAULT.stateCapability;
     c.powerCapability = val('ems-wb-power', c.powerCapability) || WB_DEFAULT.powerCapability;
     c.phaseCapability = ($('ems-wb-phase') || { value: c.phaseCapability }).value || '';
-    c.startCard = ($('ems-wb-startcard') || { value: c.startCard }).value || '';
-    c.powerCard = val('ems-wb-powercard', c.powerCard) || WB_DEFAULT.powerCard;
-    c.powerArg = val('ems-wb-powerarg', c.powerArg) || WB_DEFAULT.powerArg;
   }
 
   /** Kleines Diagramm der Rampe: Batteriestand (x) gegen Anteil Solarstrom fürs Auto (y), mit Markierung «jetzt» und ggf. der Verschiebung durch den Bonus. */
@@ -1230,13 +1137,11 @@
     var kindRow = '<div class="ems-row"><label class="ems-f ems-wide"><span>' + esc(S.ctrlKind) + '</span><select id="' + p + 'kind" data-ems-mode="' + i + '">'
       + '<option value="device"' + (viaFlow ? '' : ' selected') + '>' + esc(S.ctrlViaDevice) + '</option><option value="flow"' + (viaFlow ? ' selected' : '') + '>' + esc(S.ctrlViaFlow) + '</option></select></label></div>';
     var ctrl = kindRow + (viaFlow
-      ? '<div class="ems-row"><label class="ems-f ems-wide"><span>' + esc(S.flowOnLbl) + '</span><select id="' + p + 'flowOn" data-ems-mode="' + i + '">' + flowOptions(r.flowOn) + '</select></label>'
-        + '<label class="ems-f ems-wide"><span>' + esc(S.flowOffLbl) + '</span><select id="' + p + 'flowOff" data-ems-mode="' + i + '">' + flowOptions(r.flowOff) + '</select></label></div>'
-        + (state.flows.length ? '' : '<p class="warn">' + esc(S.flowsNone) + '</p>') + '<p class="ems-why">' + esc(S.flowHint) + '</p>'
+      ? cmdFiresHtml([['consumer.' + r.deviceId + '.on', r.name], ['consumer.' + r.deviceId + '.off', r.name]])
         + '<div class="ems-row">' + field(S.assumedW, p + 'assumedW', r.assumedW) + '</div>'
       : '<div class="ems-row"><label class="ems-f ems-wide"><span>' + esc(S.ctrlDevice) + '</span><select id="' + p + 'dev" data-ems-mode="' + i + '">' + deviceOptions(r.deviceId, hasCap(/^onoff$/), S.none) + '</select></label></div>');
     var ctrlBody = '';
-    if (viaFlow ? !!(r.flowOn && r.flowOn.id) : !!r.deviceId) {
+    if (viaFlow || !!r.deviceId) {
       var h = r.humidity;
       var hum = true
         ? '<details class="ems-adv"' + (state.open[p + 'hum'] ? ' open' : '') + '><summary data-ems-adv="' + p + 'hum">' + esc(S.humTitle) + ' (' + esc(String(S.tagOptional).toLowerCase()) + ') · ' + esc(h.enabled ? S.curOn : S.curOff) + '</summary>'
@@ -1377,7 +1282,7 @@
         + '<option value="flow"' + (viaFlow ? ' selected' : '') + '>' + esc(S.fuseFlow) + '</option>'
         + '</select></label></div>'
         + (viaFlow
-          ? '<div class="ems-row"><label class="ems-f ems-wide"><span>&nbsp;</span><select data-ems-fuseshedflow="' + i + '">' + flowOptions(e.offFlow) + '</select></label></div>'
+          ? cmdFiresHtml([['shed.' + (e.kind === 'charger' ? 'charger' : e.id), e.name]])
           : '<p class="ems-why">' + esc(auto) + '</p>')
         + '</details>';
     }).join('') || '<p class="ems-why">' + esc(S.fuseShedNone) + '</p>';
@@ -1471,8 +1376,10 @@
       + '<label class="ems-f ems-wide"><span>&nbsp;</span><select id="' + idBase + '-cap">' + capOptions(devId, re, cap) + '</select></label>' + (devId && cap ? curHtml(devId, cap) : '') + (tip ? tipT(idBase, tip) : '') + '</div>';
   }
   function sgFld(label, id, value, type, extra, hint) { return '<div class="ems-row">' + field(label, id, value, type, extra, hint) + '</div>'; }
+  // Früher wählte man hier einen Flow; jetzt gibt die App einen Befehl aus (Flow-Rezepte)
+  var CMD_OF = { 'ems-sg-fn': 'sgready.normal', 'ems-sg-fb': 'sgready.boost', 'ems-sg-ff': 'sgready.forced', 'ems-dhw-dly-flow': 'dhw.delay', 'ems-dhw-flowon': 'dhw.program', 'ems-dhw-flowoff': 'dhw.normal' };
   function sgFlowSel(label, id, cur) {
-    return '<div class="ems-row"><label class="ems-f ems-wide"><span>' + esc(label) + '</span><select id="' + id + '">' + flowOptions(cur) + '</select></label></div>';
+    return '<p class="ems-why">' + esc(S.cmdFires) + ' <b>' + esc(cmdName(CMD_OF[id] || id, '')) + '</b></p>';
   }
   // Zieltemperatur: fest oder aus der Wärmepumpe (WW-Soll). Die Wärmepumpe schaltet selbst bei Soll + Hysterese ab - ein festes Ziel darüber würde nie erreicht.
   function targetBlock(pre, c, manualId, label, manualTip) {
@@ -1543,9 +1450,6 @@
     g.output = val('ems-sg-output', g.output) === 'flows' ? 'flows' : 'relays';
     if ($('ems-sg-rec-dev')) g.recommendRelay = { deviceId: val('ems-sg-rec-dev', g.recommendRelay.deviceId), capability: val('ems-sg-rec-cap', g.recommendRelay.capability) };
     if ($('ems-sg-frc-dev')) g.forceRelay = { deviceId: val('ems-sg-frc-dev', g.forceRelay.deviceId), capability: val('ems-sg-frc-cap', g.forceRelay.capability) };
-    if ($('ems-sg-fn')) g.flowNormal = pickFlow($('ems-sg-fn').value || '', g.flowNormal);
-    if ($('ems-sg-fb')) g.flowBoost = pickFlow($('ems-sg-fb').value || '', g.flowBoost);
-    if ($('ems-sg-ff')) g.flowForced = pickFlow($('ems-sg-ff').value || '', g.flowForced);
     g.live = chk('ems-sg-live');
   }
 
@@ -1596,8 +1500,8 @@
     var sh = state.shadow && state.shadow.dhw && state.shadow.dhw.delay;
     var now = sh && sh.active && sh.releaseAt
       ? '<p class="ems-why ems-ok" style="margin:4px 0">' + esc(S.dlyNow.replace('{time}', new Date(sh.releaseAt).toLocaleTimeString(LANG === 'de' ? 'de-CH' : 'en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit' })).replace('{why}', sh.reason || '')) + '</p>' : '';
-    var viaCardD = d.output === 'card' || d.output === 'trigger';
-    var ready = d.output === 'trigger' ? true : viaCardD ? !!(d.setpoint && d.setpoint.deviceId && d.setpoint.card) : !!(d.output === 'flows' && l.flowDelay && l.flowDelay.id && d.flowOff && d.flowOff.id);
+    var viaCardD = d.output === 'trigger';
+    var ready = true; // Auslöser mit Wert oder Befehle: nichts weiter einzustellen
     var need = l.enabled && !ready ? '<p class="ems-why ems-warn">' + esc(S.dlyNeed) + '</p>' : '';
     return '<div class="ems-box"><b>' + esc(S.dlyTitle) + '</b><p class="ems-why">' + esc(S.dlyWhy) + '</p>'
       + '<div class="ems-row">' + check(S.dlyOn, 'ems-dhw-dly-on', l.enabled, '') + '</div>' + now + need
@@ -1612,7 +1516,6 @@
     if (!$('ems-dhw-dly-on')) return;
     var l = dlyCfg(d);
     l.enabled = chk('ems-dhw-dly-on');
-    if ($('ems-dhw-dly-flow')) l.flowDelay = pickFlow($('ems-dhw-dly-flow').value || '', l.flowDelay);
     l.windowFrom = val('ems-dhw-dly-from', l.windowFrom); l.windowTo = val('ems-dhw-dly-to', l.windowTo);
     l.minForecastKwh = num('ems-dhw-dly-fc', l.minForecastKwh); l.comfortTemp = num('ems-dhw-dly-comfort', l.comfortTemp);
     l.releaseWeekday = val('ems-dhw-dly-rwd', l.releaseWeekday); l.releaseWeekend = val('ems-dhw-dly-rwe', l.releaseWeekend);
@@ -1714,7 +1617,7 @@
       + sgDevPair(S.sgSensor, 'ems-dhw-sensor', d.sensorId, d.tempCapability, /^measure_temperature/, S.sgSensorH)
       + targetBlock('ems-dhw', d, 'ems-dhw-target', S.dhwTarget, S.dhwTargetH)
       + delayBox(d)
-      + '<div class="ems-row"><label class="ems-f ems-wide"><span>' + esc(S.sgDhwOut) + tipI('dhw-out') + '</span><select id="ems-dhw-out" data-ems-sgdev="1"><option value="flows"' + (cap || viaCard || viaTrig ? '' : ' selected') + '>' + esc(S.sgDhwFlows) + '</option><option value="card"' + (viaCard ? ' selected' : '') + '>' + esc(S.sgDhwCard) + '</option><option value="trigger"' + (viaTrig ? ' selected' : '') + '>' + esc(S.sgDhwTrig) + '</option><option value="capability"' + (cap ? ' selected' : '') + '>' + esc(S.sgDhwCap) + '</option></select></label>' + tipT('dhw-out', S.sgDhwH) + '</div>'
+      + '<div class="ems-row"><label class="ems-f ems-wide"><span>' + esc(S.sgDhwOut) + tipI('dhw-out') + '</span><select id="ems-dhw-out" data-ems-sgdev="1"><option value="flows"' + (cap || viaCard || viaTrig ? '' : ' selected') + '>' + esc(S.sgDhwFlows) + '</option><option value="trigger"' + (viaTrig ? ' selected' : '') + '>' + esc(S.sgDhwTrig) + '</option><option value="capability"' + (cap ? ' selected' : '') + '>' + esc(S.sgDhwCap) + '</option></select></label>' + tipT('dhw-out', S.sgDhwH) + '</div>'
       + (viaTrig ? '<p class="ems-why">' + esc(S.spTrigWhy) + '</p>' + spTemps(spCfg(d)) : viaCard ? spBox(d) : cap
         ? sgDevPair(S.sgDhwDev, 'ems-dhw-dev', dev.deviceId, dev.capability, /./) + '<div class="ems-row">' + field(S.sgDhwOnV, 'ems-dhw-onv', dev.onValue, 'text') + field(S.sgDhwOffV, 'ems-dhw-offv', dev.offValue, 'text') + '</div>'
         : sgFlowSel(S.sgDhwOn, 'ems-dhw-flowon', d.flowOn) + sgFlowSel(S.sgDhwOff, 'ems-dhw-flowoff', d.flowOff))
@@ -1749,8 +1652,6 @@
     d.stopDelayMin = num('ems-dhw-stopdelay', d.stopDelayMin); d.cooldownMin = num('ems-dhw-cooldown', d.cooldownMin);
     d.output = ['capability', 'card', 'trigger'].indexOf(val('ems-dhw-out', d.output)) >= 0 ? val('ems-dhw-out', d.output) : 'flows';
     syncSp(d);
-    if ($('ems-dhw-flowon')) d.flowOn = pickFlow($('ems-dhw-flowon').value || '', d.flowOn);
-    if ($('ems-dhw-flowoff')) d.flowOff = pickFlow($('ems-dhw-flowoff').value || '', d.flowOff);
     if ($('ems-dhw-dev-dev')) {
       d.device = {
         deviceId: val('ems-dhw-dev-dev', ''), capability: val('ems-dhw-dev-cap', ''), onValue: String(($('ems-dhw-onv') || { value: '' }).value || ''), offValue: String(($('ems-dhw-offv') || { value: '' }).value || ''),
@@ -1837,6 +1738,7 @@
       + '<p class="lbl">' + esc(S.sgTitle) + '</p><div class="ems-list">' + listRow('sg', 'boiler', '#e67e22', S.sgRow, '', sgSummary(), sgBody()) + '</div>'
       + '<p class="lbl">' + esc(S.dhwTitle) + '</p><div class="ems-list">' + listRow('dhw', 'drop', '#2980b9', S.dhwRow, '', dhwSummary(), dhwBody()) + '</div>'
       + '<p class="lbl">' + esc(S.fuseTitle) + '</p><div class="ems-list">' + listRow('fuse', 'bolt', '#c0392b', S.fuseRow, '', fuseSummary(), fuseBody()) + '</div>'
+      + '<p class="lbl">' + esc(S.cmdLabel) + '</p><div class="ems-list">' + listRow('cmd', 'bolt', '#8e44ad', S.cmdRow, '', { text: (((state.shadow && state.shadow.commands) || []).length) + '', cls: 'muted' }, commandsHtml()) + '</div>'
       + '<p class="lbl">' + esc(S.paLabel) + '</p><div class="ems-list">' + listRow('learn', 'target', '#16a085', S.paRow, '', planAccuracySummary(), planAccuracyHtml(), true) + '</div>'
       + '<p class="lbl">' + esc(S.calcTitle) + '</p><div class="ems-list">' + listRow('calc', 'clock', '#6b7280', S.calcRow, '', { text: calcSummary(), cls: 'muted' }, calcBody()) + '</div>'
       + '<p><button class="ems-save" id="ems-savebtn" data-ems-save="1">' + esc(state.dirty ? S.saveDirty : S.save) + '</button></p><p class="sub" id="ems-msg">' + esc(state.msg) + '</p>';
@@ -2819,13 +2721,12 @@
         if ($('ems-bp-backupsoc')) bb.backupReserve = Object.assign({ active: false, soc: 50 }, bb.backupReserve, { soc: num('ems-bp-backupsoc', (bb.backupReserve || {}).soc) });
       }
       if (s.key === 'bat' && state.open['src-bat'] && $('ems-bc-on')) {
-        var bcc = state.cfg.battery.control = Object.assign({ enabled: false, live: false, preset: '', normalDischargeW: 7000, repeatMin: 10 }, state.cfg.battery.control);
+        var bcc = state.cfg.battery.control = Object.assign({ enabled: false, live: false, normalDischargeW: 7000, repeatMin: 10 }, state.cfg.battery.control);
         bcc.enabled = chk('ems-bc-on');
         if ($('ems-bc-normal')) {
           bcc.normalDischargeW = num('ems-bc-normal', bcc.normalDischargeW);
           bcc.repeatMin = num('ems-bc-repeat', bcc.repeatMin);
         }
-        syncCustomMap(bcc);
       }
       if (s.key === 'car' && state.open['src-car'] && $('ems-car-cap')) state.cfg.car = Object.assign({ deviceId: '', socCapability: 'measure_battery' }, state.cfg.car, { capacityKwh: num('ems-car-cap', state.cfg.car ? state.cfg.car.capacityKwh : 0) });
       var d = srcDevice(s.key);
@@ -2849,8 +2750,6 @@
       }
       r.controlKind = val(p + 'kind', r.controlKind || 'device');
       if (r.controlKind === 'flow') {
-        r.flowOn = pickFlow(val(p + 'flowOn', r.flowOn.id), r.flowOn);
-        r.flowOff = pickFlow(val(p + 'flowOff', r.flowOff.id), r.flowOff);
         r.assumedW = num(p + 'assumedW', r.assumedW);
         if (!r.deviceId || r.deviceId.indexOf('flow:') !== 0) r.deviceId = 'flow:' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
       } else if (r.deviceId && r.deviceId.indexOf('flow:') === 0) {
@@ -2904,7 +2803,7 @@
     var c = state.cfg;
     var charger = state.rows[0];
     var consumers = state.rows.filter(function (r) {
-      return r.kind === 'consumer' && r.control !== false && r.deviceId && (r.controlKind !== 'flow' || (r.flowOn && r.flowOn.id) || (r.flowOff && r.flowOff.id));
+      return r.kind === 'consumer' && r.control !== false && r.deviceId;
     }).map(function (r) {
       return {
         controlKind: r.controlKind === 'flow' ? 'flow' : 'device', flowOn: r.flowOn, flowOff: r.flowOff, assumedW: r.assumedW || 0,
@@ -2918,7 +2817,7 @@
       battery: {
         deviceId: c.battery.deviceId, socCapability: c.battery.socCapability, targetSoc: c.battery.targetSoc, reserveHours: c.battery.reserveHours, solarLimitKwh: c.battery.solarLimitKwh, chargePowerKw: c.battery.chargePowerKw, bridge: c.battery.bridge !== false, bridgeLoadKw: c.battery.bridgeLoadKw, bridgeLoadMode: c.battery.bridgeLoadMode || 'auto', reserveMode: c.battery.reserveMode === 'fixed' ? 'fixed' : 'auto', floorSoc: c.battery.floorSoc, bufferMode: c.battery.bufferMode === 'fixed' ? 'fixed' : 'auto', bufferPct: c.battery.bufferPct !== undefined ? c.battery.bufferPct : 3,
         backupReserve: { soc: c.battery.backupReserve ? c.battery.backupReserve.soc : 50 }, // active geht nur über «Heute» oder einen Flow, nie über diesen Speichern-Knopf
-        control: { enabled: !!(c.battery.control && c.battery.control.enabled), preset: (c.battery.control && c.battery.control.preset) || '', normalDischargeW: c.battery.control ? c.battery.control.normalDischargeW : 7000, repeatMin: c.battery.control ? c.battery.control.repeatMin : 10, custom: c.battery.control && c.battery.control.custom ? c.battery.control.custom : undefined },
+        control: { enabled: !!(c.battery.control && c.battery.control.enabled), normalDischargeW: c.battery.control ? c.battery.control.normalDischargeW : 7000, repeatMin: c.battery.control ? c.battery.control.repeatMin : 10 },
       },
       charger: { id: charger ? charger.deviceId : c.charger.id, costName: charger ? charger.name : c.charger.costName, maxAmps: charger ? charger.maxAmps : c.charger.maxAmps, stepHoldS: charger ? charger.stepHoldS : c.charger.stepHoldS, chargeNowAutoOff: charger ? charger.autoOff !== false : c.charger.chargeNowAutoOff !== false, stateCapability: c.charger.stateCapability, powerCapability: c.charger.powerCapability, phaseCapability: c.charger.phaseCapability, startCard: c.charger.startCard, powerCard: c.charger.powerCard, powerArg: c.charger.powerArg },
       pv: { factor: c.pv ? c.pv.factor : 1, factorAuto: !!(c.pv && c.pv.factorAuto), source: (c.pv && c.pv.source) || 'auto', device: (c.pv && c.pv.device) || { id: '', today: '', tomorrow: '' } },
@@ -3184,16 +3083,14 @@
     var logDev = up(t, 'data-ems-logdev');
     if (logDev) { state.logDev = logDev === '*' ? '' : logDev; renderMain(); return; }
     if (up(t, 'data-ems-logmore')) { state.logMore = !state.logMore; renderMain(); return; }
-    var bccBtn = up(t, 'data-ems-bcc');
-    if (bccBtn) {
-      sync();
-      var bcx = state.cfg.battery.control;
-      var bm = customMap(bcx);
-      var bp = bccBtn.split(':');
-      if (bp[0] === 'add' && bm[bp[1]] && bm[bp[1]].length < MAX_BAT_STEPS) bm[bp[1]].push({ card: '', args: {}, skipWhenCarCharging: false });
-      if (bp[0] === 'del' && bm[bp[1]]) bm[bp[1]].splice(Number(bp[2]), 1);
-      bcx.custom = bm;
-      renderSetup();
+    var cmdTest = up(t, 'data-ems-cmdtest');
+    if (cmdTest) {
+      var cmdBox = $('ems-msg');
+      api('POST', '/ems/command-test', { id: cmdTest }).then(function (r) {
+        if (cmdBox) cmdBox.textContent = S.cmdTestSent + ' ' + ((r && r.title) || cmdTest);
+      }).catch(function (e) {
+        if (cmdBox) cmdBox.textContent = S.cmdTestFail + ' ' + ((e && e.message) || cmdTest);
+      });
       return;
     }
     var jobDel = up(t, 'data-ems-jobdel');
@@ -3209,7 +3106,6 @@
       sync();
       state.open[open] = !state.open[open];
       if (state.open[open]) refreshDevices();
-      if (open === 'src-bat' && state.open[open] && !state.batteryCards) loadBatteryCards();
       renderSetup();
     } else if (adv) {
       state.open[adv] = !state.open[adv];
@@ -3308,7 +3204,7 @@
     if (fuseShedKind !== null) {
       sync();
       var fzk = fuseCfg().shed[Number(fuseShedKind)];
-      if (fzk) fzk.offFlow = t.value === 'flow' ? { id: '', advanced: false, name: '' } : null;
+      if (fzk) fzk.offFlow = t.value === 'flow' ? { id: 'command', advanced: false, name: '' } : null;
       renderSetup();
       return;
     }
@@ -3323,8 +3219,6 @@
     }
     if (t.id && /accuEnable$/.test(t.id)) { sync(); renderSetup(); return; }
     if (g('data-ems-bploadmode') !== null || g('data-ems-bpmode') !== null || g('data-ems-bpbufmode') !== null) { sync(); renderSetup(); return; }
-    if (g('data-ems-bcpreset') !== null) { sync(); state.cfg.battery.control.preset = t.value; renderSetup(); return; }
-    if (g('data-ems-bccard') !== null) { sync(); renderSetup(); return; }
     if (g('data-ems-compare') !== null) {
       var cmpOn = !!t.checked;
       api('PUT', '/ems/config', { compare: cmpOn }).then(function () { state.cfg.compare = cmpOn; return refreshStatus(); }).catch(function () { t.checked = !cmpOn; });

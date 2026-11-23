@@ -487,8 +487,8 @@ test('Runner: Ausgabe über Flows - je Zustand ein Flow, nur beim Wechsel, ohne 
     flowBoost: { id: 'fb', advanced: true, name: 'Empfehlung' },
   };
   const { runner, calls, tempRef } = makeRunner(flows);
-  runner.actuators.consumer = async (id, on, { live, flow }) => {
-    fired.push([flow.id, live]);
+  runner.actuators.consumer = async (id, on, { live, command }) => {
+    fired.push([CMD_ID[command], live]);
     return { cmd: 'on', live };
   };
   await runner.tickCharger(at(10));
@@ -616,8 +616,8 @@ test('Warmwasser-Programm (eigenes Modul) per Flow: ein beim Start, zurück auf 
     ...dhwBase, flowOn: { id: 'on', advanced: false, name: 'WW an' }, flowOff: { id: 'off', advanced: true, name: 'WW aus' },
   });
   runner.prices = { getSlots: cheapAt22 };
-  runner.actuators.consumer = async (id, on, { live, flow }) => {
-    fired.push([flow.id, live]);
+  runner.actuators.consumer = async (id, on, { live, command }) => {
+    fired.push([CMD_ID[command], live]);
     return { cmd: 'on', live };
   };
   await runner.tickCharger(at(22));
@@ -663,8 +663,8 @@ test('Warmwasser-Programm und SG-Ready schliessen sich gegenseitig aus: wer läu
     ...dhwBase, flowOn: { id: 'on', advanced: false, name: 'WW an' }, flowOff: { id: 'off', advanced: false, name: 'WW aus' },
   });
   runner.prices = { getSlots: () => dayPrices(at(10), at(12)) };
-  runner.actuators.consumer = async (id, on, { live, flow }) => {
-    fired.push([flow.id, live]);
+  runner.actuators.consumer = async (id, on, { live, command }) => {
+    fired.push([CMD_ID[command], live]);
     return { cmd: 'on', live };
   };
   let pv = 0;
@@ -731,8 +731,8 @@ test('cheapestOfDay: die günstigsten N Stunden des lokalen Tages, zusammenhäng
 test('Runner: das Warmwasser-Programm startet nur in den günstigsten Stunden und nicht ohne Tagespreise', async () => {
   const fired = [];
   const { runner } = makeRunner({ enabled: false }, { v: 40 }, { ...dhwBase, flowOn: { id: 'on', advanced: false, name: 'x' } });
-  runner.actuators.consumer = async (id, on, { flow }) => {
-    fired.push(flow.id);
+  runner.actuators.consumer = async (id, on, { command }) => {
+    fired.push(CMD_ID[command]);
     return { cmd: 'on' };
   };
   runner.prices = { getSlots: () => dayPrices(at(2), at(4)) };
@@ -750,8 +750,8 @@ test('Runner: das Warmwasser-Programm startet nur in den günstigsten Stunden un
 test('Runner: «günstigste Stunden des Tages» rechnet mit dem ganzen Tag (auch Vergangenes), sonst gehörte abends jede Viertelstunde dazu', async () => {
   const fired = [];
   const { runner } = makeRunner({ enabled: false }, { v: 40 }, { ...dhwBase, flowOn: { id: 'on', advanced: false, name: 'x' } });
-  runner.actuators.consumer = async (id, on, { flow }) => {
-    fired.push(flow.id);
+  runner.actuators.consumer = async (id, on, { command }) => {
+    fired.push(CMD_ID[command]);
     return { cmd: 'on' };
   };
   const full = dayPrices(at(2), at(4)); // günstig war es nachts
@@ -834,8 +834,8 @@ test('Runner: Ziel aus der Wärmepumpe (WW-Soll minus Toleranz) für SG-Ready un
   });
   const fired = [];
   dhw.runner.prices = { getSlots: cheapAt22 };
-  dhw.runner.actuators.consumer = async (id, on, { flow }) => {
-    fired.push(flow.id);
+  dhw.runner.actuators.consumer = async (id, on, { command }) => {
+    fired.push(CMD_ID[command]);
     return { cmd: 'on' };
   };
   dhw.runner.inputs.readNumber = async (id) => (id === 'wp' ? 48 : dhw.tempRef.v);
@@ -855,8 +855,8 @@ test('Warmwasser-Programm: Betriebsart-Prüfung bricht das eigene Umschalten nic
   });
   runner.prices = { getSlots: cheapAt22 };
   runner.inputs.readValue = async () => mode;
-  runner.actuators.consumer = async (id, on, { flow }) => {
-    fired.push(flow.id);
+  runner.actuators.consumer = async (id, on, { command }) => {
+    fired.push(CMD_ID[command]);
     return { cmd: 'on' };
   };
   await runner.tickCharger(at(22));
@@ -877,8 +877,8 @@ test('Pause (Widget-Schalter): beendet ein laufendes Warmwasser-Programm sofort,
     ...dhwBase, flowOn: { id: 'on', advanced: false, name: 'x' }, flowOff: { id: 'off', advanced: false, name: 'y' },
   });
   runner.prices = { getSlots: cheapAt22 };
-  runner.actuators.consumer = async (id, on, { flow }) => {
-    fired.push(flow.id);
+  runner.actuators.consumer = async (id, on, { command }) => {
+    fired.push(CMD_ID[command]);
     return { cmd: 'on' };
   };
   await runner.tickCharger(at(22));
@@ -953,8 +953,8 @@ test('Runner: Start von Hand wird einmal verbraucht; Controller meldet Start und
   });
   const fired = [];
   dhw.runner.prices = { getSlots: () => [] };
-  dhw.runner.actuators.consumer = async (id, on, { flow }) => {
-    fired.push(flow.id);
+  dhw.runner.actuators.consumer = async (id, on, { command }) => {
+    fired.push(CMD_ID[command]);
     return { cmd: 'on' };
   };
   await dhw.runner.tickCharger(at(12));
@@ -972,8 +972,8 @@ test('Gegenseitiger Ausschluss, umgekehrt und von Hand: läuft SG-Ready, startet
     ...dhwBase, flowOn: { id: 'on', advanced: false, name: 'WW an' }, flowOff: { id: 'off', advanced: false, name: 'WW aus' },
   });
   runner.prices = { getSlots: () => dayPrices(at(10), at(12)) };
-  runner.actuators.consumer = async (id, on, { live, flow }) => {
-    fired.push(flow.id);
+  runner.actuators.consumer = async (id, on, { live, command }) => {
+    fired.push(CMD_ID[command]);
     return { cmd: 'on', live };
   };
   runner.inputs.chargerInputs = async () => ({
@@ -1024,8 +1024,8 @@ test('Modul ausgeschaltet während eines Laufs: SG-Ready geht sauber zurück auf
     ...dhwBase, flowOn: { id: 'on', advanced: false, name: 'x' }, flowOff: { id: 'off', advanced: false, name: 'y' },
   });
   d.runner.prices = { getSlots: cheapAt22 };
-  d.runner.actuators.consumer = async (id, on, { flow }) => {
-    fired.push(flow.id);
+  d.runner.actuators.consumer = async (id, on, { command }) => {
+    fired.push(CMD_ID[command]);
     return { cmd: 'on' };
   };
   await d.runner.tickCharger(at(22));
@@ -1066,8 +1066,8 @@ test('Externer SG-Ready-Lauf (z. B. der bisherige Flow schaltet das Relais): Rü
   });
   runner.prices = { getSlots: cheapAt22 };
   runner.inputs.readValue = async (id, cap) => (cap === 'sg' ? reported : null);
-  runner.actuators.consumer = async (id, on, { flow }) => {
-    fired.push(flow.id);
+  runner.actuators.consumer = async (id, on, { command }) => {
+    fired.push(CMD_ID[command]);
     return { cmd: 'on' };
   };
   runner.inputs.chargerInputs = async () => ({
@@ -1187,6 +1187,11 @@ test('Korrekturfaktor automatisch: kommen die Tage erst später (z. B. durch ein
   assert.deepEqual(set, [0.6], 'sofort angewendet, sobald die Empfehlung da ist');
 });
 
+// Befehle der App (Auslöser) statt Flows: die früheren Flow-IDs der Tests stehen für die Befehle
+const CMD_ID = {
+  'dhw.program': 'on', 'dhw.normal': 'off', 'dhw.delay': 'dly', 'sgready.normal': 'fn', 'sgready.boost': 'fb', 'sgready.forced': 'ff',
+};
+
 function delayRunner(over = {}) {
   const fired = [];
   const r = makeRunner({ enabled: false }, { v: 43 }, {
@@ -1205,10 +1210,10 @@ function delayRunner(over = {}) {
   });
   let soll = 48;
   r.runner.inputs.readNumber = async (id) => (id === 'wp' ? soll : r.tempRef.v);
-  r.runner.actuators.consumer = async (id, on, { flow }) => {
-    fired.push(flow.id);
-    if (flow.id === 'dly') soll = 30;
-    if (flow.id === 'off') soll = 48;
+  r.runner.actuators.consumer = async (id, on, { command }) => {
+    fired.push(CMD_ID[command]);
+    if (CMD_ID[command] === 'dly') soll = 30;
+    if (CMD_ID[command] === 'off') soll = 48;
     return { cmd: 'on' };
   };
   r.runner.pv.remainingTodayKwh = () => 20;
@@ -1236,7 +1241,7 @@ test('Warmwasser verzögern (Option): senkt den Soll bei wenig Wärme und guter 
   assert.deepEqual(t.fired, ['dly', 'off'], 'heute nicht nochmals');
 });
 
-test('Warmwasser verzögern: Komfortgrenze, SG-Ready, Pause und Ausschalten geben frei; ohne Option oder ohne Flows passiert nichts', async () => {
+test('Warmwasser verzögern: Komfortgrenze, SG-Ready, Pause und Ausschalten geben frei; ohne Option passiert nichts', async () => {
   const a = delayRunner();
   await a.runner.tickCharger(at(7));
   a.tempRef.v = 31;
@@ -1258,11 +1263,6 @@ test('Warmwasser verzögern: Komfortgrenze, SG-Ready, Pause und Ausschalten gebe
   const off = delayRunner({ delay: { enabled: false, flowDelay: { id: 'dly', advanced: true, name: 'v' } } });
   await off.runner.tickCharger(at(7));
   assert.deepEqual(off.fired, [], 'Option aus: nichts');
-
-  const noFlow = delayRunner({ delay: { enabled: true, flowDelay: { id: '', advanced: false, name: '' } } });
-  await noFlow.runner.tickCharger(at(7));
-  assert.deepEqual(noFlow.fired, []);
-  assert.match(noFlow.runner.dhwCurrent.delay.reason, /braucht die Aktionskarte oder die Flows/);
 
   const cool = delayRunner();
   cool.tempRef.v = 49; // über der Startschwelle (47)
@@ -1297,36 +1297,24 @@ test('Preisoptimierung ab Datum: vorher keine Preis-Starts (Grund wird genannt),
   assert.equal(ready.runner.dhwCurrent.on, true, 'Datum erreicht: günstige Stunde startet das Programm');
 });
 
-test('Ausgabe «Aktionskarte»: Verzögerung schreibt delayC, Freigabe den gemerkten Normal-Soll, das Programm programC - ohne Flows', async () => {
-  const calls = [];
+test('Frühere Ausgabe «Aktionskarte» läuft jetzt über den Auslöser (Apps dürfen keine fremden Karten ausführen)', async () => {
+  const fired = [];
   const t = delayRunner({
     output: 'card',
-    flowOn: { id: '', advanced: false, name: '' },
-    flowOff: { id: '', advanced: false, name: '' },
     delay: { enabled: true, minForecastKwh: 15 },
     setpoint: {
-      deviceId: 'wp', card: 'write_register', valueArg: 'value', scale: 10, args: { register: '1012', addressing: '1', type: 'INT16', mode: 'live' }, programC: 52, delayC: 30, normalC: 47,
+      deviceId: 'wp', card: 'write_register', valueArg: 'value', scale: 10, args: { register: '1012' }, programC: 52, delayC: 30, normalC: 47,
     },
   });
-  t.runner.actuators.card = async (id, args, { live }) => { calls.push({ id, args, live }); return { cmd: 'card' }; };
+  t.runner.actuators.trigger = async (id, tokens, { live }) => { fired.push({ id, tokens, live }); return { cmd: 'trigger' }; };
+  t.runner.actuators.card = undefined;
   await t.runner.tickCharger(at(7));
-  assert.equal(t.runner.dhwDelay.active, true, 'verzögert ohne Flow');
-  assert.deepEqual(JSON.parse(JSON.stringify(calls[0])), {
-    id: 'homey:device:wp:write_register', args: { register: '1012', addressing: '1', type: 'INT16', mode: 'live', value: 300 }, live: true,
-  });
-  assert.deepEqual(t.fired, [], 'kein Flow gestartet');
-  await t.runner.tickCharger(at(17)); // Freigabezeit vorbei
-  assert.equal(t.runner.dhwDelay.active, false);
-  assert.equal(calls[1].args.value, 480, 'zurück auf den vorher gemerkten Soll 48 °C');
-  // Programm: ein = 52 °C, aus = Basis (hier 48), ohne Basis der Normalwert
-  const ex = [];
-  await t.runner._dhwApply(t.runner.cfg ? t.runner.cfg.dhw : { output: 'card', setpoint: { deviceId: 'wp', card: 'write_register', valueArg: 'value', scale: 10, args: {}, programC: 52, delayC: 30, normalC: 47 } }, true, false, ex);
-  assert.equal(calls[calls.length - 1].args.value, 520);
-  t.runner._dhwSollBase = null;
-  await t.runner._dhwApply({ output: 'card', setpoint: { deviceId: 'wp', card: 'write_register', valueArg: 'value', scale: 10, args: {}, programC: 52, delayC: 30, normalC: 47 } }, false, false, ex);
-  assert.equal(calls[calls.length - 1].args.value, 470, 'Ersatz: eingestellter Normalwert');
-  // Schutz: Werte ausserhalb 10..60 °C werden nicht geschrieben
-  await assert.rejects(() => t.runner._writeSetpoint({ deviceId: 'wp', card: 'c', valueArg: 'value', scale: 10, args: {} }, 75, true), /ausserhalb/);
+  assert.equal(t.runner.dhwDelay.active, true, 'verzögert ohne Karte und ohne Flow');
+  assert.deepEqual(JSON.parse(JSON.stringify(fired[0])), { id: 'ems_dhw_setpoint', tokens: { setpoint: 30, tenths: 300, kind: 'delay' }, live: true });
+  await t.runner.tickCharger(at(17));
+  assert.equal(fired[1].tokens.tenths, 480, 'zurück auf den vorher gemerkten Soll 48 °C');
+  // Schutz: Werte ausserhalb 10..60 °C werden nicht ausgegeben
+  await assert.rejects(() => t.runner._writeSetpoint({ output: 'card' }, 75, true), /ausserhalb/);
 });
 
 test('Ausgabe «Auslöser mit Wert»: Verzögerung, Programm und Freigabe feuern ems_dhw_setpoint mit Soll und Art - kein Flow, keine Karte nötig', async () => {

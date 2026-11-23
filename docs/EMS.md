@@ -818,3 +818,31 @@ etwa 30 bis 40 Rp./kWh, überschätzt man ihn, nur etwa 6 Rp./kWh (die Ladung wi
 - Anzeige: Einrichten > Hausbatterie > Fahrplan, «Puffer». Bei Automatik steht der aktuelle Wert in der Auswahl («Automatik (aktuell 4 %)») und
   darunter, woraus er sich ergibt. Der Zustand kommt als `buffer` im Shadow-Zustand (`EmsRunner.bufferInfo`).
 - Gilt nur im Modus «automatisch (Fahrplan)». Der Puffer fängt nur zu hohen Verbrauch ab, nicht zu wenig Sonne.
+
+## Befehle statt Aktionskarten (23.11.2026)
+
+**Befund:** Homey erlaubt einer App nicht, die Aktionskarten anderer Geräte auszuführen oder Flows zu starten (HTTP 403
+«Missing Scopes», auch mit `homey:manager:api`). Der Trockenlauf konnte das nicht zeigen; beim ersten Live-Lauf kam
+«EMS: battery - Missing Scopes». Erlaubt sind: eigene Auslöser-Karten der App und das direkte Schreiben von Capabilities.
+
+**Lösung (wie bei der FusionSolar-App): ein Auslöser «Das Energiemanagement gibt einen Befehl» (`ems_command`).** Die App gibt
+Befehle aus, ein Flow des Nutzers führt die Karte seines Geräts aus (jede Marke). Kein API-Schlüssel nötig (bewusst: Vertrauen).
+
+| Befehl | Tags |
+|---|---|
+| `battery.charge` / `battery.hold` / `battery.normal` | `power` (W), `target_soc` (%), `discharge` (W, bei laufender Wallbox 0) |
+| `charger.set` / `charger.start` / `charger.stop` | `power` (W), `amps`, `phases` |
+| `consumer.<id>.on` / `.off` | nur Verbraucher mit Schaltart «Befehl an einen Flow» |
+| `sgready.normal` / `.boost` / `.forced` | nur bei SG-Ready-Ausgabe «Flows» |
+| `dhw.program` / `.normal` / `.delay` | nur bei Warmwasser-Ausgabe «Flows»; mit «Auslöser mit Wert» weiter `ems_dhw_setpoint` |
+| `shed.<id>` | Hausanschluss-Schutz für Geräte mit eigenem Aus-Befehl |
+
+- Code: `lib/ems/commands.js` (Liste, Titel, Tags), `Actuators.command()` (feuert den Auslöser, nur live), `app.js`
+  (Auswahl der Befehle im Auslöser per Autocomplete). Capabilities (eBike-Steckdose, SG-Ready-Relais, Programmstart) werden weiter direkt geschrieben.
+- Einstellungen: Abschnitt «Flow-Rezepte» listet alle Befehle mit Hinweisen (LUNA2000, go-e) und einem Knopf «Testen»
+  (`POST /ems/command-test`: gibt den Befehl einmal von Hand aus, auch im Testmodus, mit vorsichtigen Werten).
+- Entfallen: Vorlagen-/Karten-Zuordnung der Batterie, Karten der Wallbox, Flow-Auswahl bei Verbrauchern, SG-Ready, Warmwasser und
+  Hausanschluss. Die Warmwasser-Ausgabe «Aktionskarte» läuft als «Auslöser mit Wert».
+- Flows für die eigene Anlage (Ordner «Energy > Dynamischer Stromtarif > EMS»): «EMS Befehle: Batterie → LUNA2000»,
+  «… Wallbox → go-e», «… Luftentfeuchter Estrich → DryFy». Test 23.11.2026: Halten setzt die Entladegrenze auf 0 W (Entladung stoppt nach ca. 20 s),
+  Normal stellt 7000 W wieder her.

@@ -149,6 +149,11 @@ class DynamicTariffApp extends Homey.App {
         return !!(cur && cur.isOn);
       });
 
+    // Befehle an Geräte: ein Auslöser, den der Nutzer mit der Karte seines Geräts verbindet (Apps dürfen keine fremden Karten ausführen)
+    const commandCard = this.homey.flow.getTriggerCard('ems_command');
+    commandCard.registerRunListener(async (args, state) => !!(args && args.command && state && args.command.id === state.id));
+    commandCard.registerArgumentAutocompleteListener('command', async (query) => this.ems.commandItems(query));
+
     this.homey.flow.getActionCard('ems_set_silent')
       .registerRunListener(async (args) => {
         this.ems.setSilent(args.mode === 'on'); return true;

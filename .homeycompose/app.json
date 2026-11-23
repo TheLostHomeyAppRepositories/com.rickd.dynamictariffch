@@ -194,6 +194,10 @@
       "method": "post",
       "path": "/ems/reset-ledger"
     },
+    "postEmsCommandTest": {
+      "method": "post",
+      "path": "/ems/command-test"
+    },
     "postEmsResetData": {
       "method": "post",
       "path": "/ems/reset-data"

@@ -74,7 +74,7 @@ homey app install
 ## EMS-Modul (ab 0.3.0, unveröffentlicht)
 
 Energiemanagement für go-e-Wallbox und einzelne Verbraucher in `lib/ems/`, siehe `docs/EMS.md`.
-Standardmässig **aus** und im **Trockenlauf**; Geräte schaltet nur `lib/ems/Actuators.js`, und nur wenn
+Standardmässig **aus** und im **Trockenlauf**; Geräte schaltet nur `lib/ems/Actuators.js`. **Apps dürfen keine Aktionskarten fremder Geräte ausführen und keine Flows starten** (403 «Missing Scopes»): Batterie, Wallbox und Flow-Verbraucher laufen über den Auslöser `ems_command` (Befehle, siehe `docs/EMS.md`), nur Capabilities werden direkt geschrieben. Befehle gehen nur raus, wenn
 `charger.live` bzw. `consumer.live` gesetzt ist. Entscheidungslogik in `lib/ems/planner/*` bleibt rein
 (keine Homey-Aufrufe, keine festen Geräte-IDs). Tests: `test/ems-*.test.js`.
 

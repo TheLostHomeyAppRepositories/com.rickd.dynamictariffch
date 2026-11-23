@@ -113,6 +113,10 @@ module.exports = {
     return homey.app.ems.previewPlan(body);
   },
 
+  async postEmsCommandTest({ homey, body }) {
+    return homey.app.ems.testCommand(body && body.id);
+  },
+
   async postEmsResetLedger({ homey }) {
     return homey.app.ems.resetLedger();
   },

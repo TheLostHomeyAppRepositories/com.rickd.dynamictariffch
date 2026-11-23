@@ -60,15 +60,10 @@ test('Config: Verbraucher-Symbol - jedes im Setup wählbare Icon wird auch gespe
 function fakeActuators() {
   const calls = [];
   const act = new Actuators({}, () => {});
+  act._fire = async (id, tokens) => {
+    calls.push(['command', id, tokens.title]);
+  };
   act._api = async () => ({
-    flow: {
-      triggerFlow: async (a) => {
-        calls.push(['flow', a.id]);
-      },
-      triggerAdvancedFlow: async (a) => {
-        calls.push(['advanced', a.id]);
-      },
-    },
     devices: {
       setCapabilityValue: async (a) => {
         calls.push(['device', a.deviceId, a.capabilityId, a.value]);
@@ -78,32 +73,30 @@ function fakeActuators() {
   return { act, calls };
 }
 
-test('Actuators: Verbraucher über Flow - Standard- und erweiterter Flow, Testbetrieb nur simuliert, ohne Flow nichts', async () => {
+test('Actuators: Verbraucher über Befehl - Auslöser «Befehl», Testbetrieb nur simuliert, ohne Befehl das Gerät', async () => {
   const { act, calls } = fakeActuators();
-  assert.deepEqual(await act.consumer('flow:x', true, { live: true, flow: { id: 'f1', advanced: false, name: 'A' } }), {
-    cmd: 'on', live: true, via: 'flow', flow: 'A',
+  assert.deepEqual(await act.consumer('flow:x', true, { live: true, command: 'consumer.flow:x.on', name: 'Sauna' }), {
+    cmd: 'on', live: true, via: 'command', command: 'consumer.flow:x.on',
   });
-  await act.consumer('flow:x', false, { live: true, flow: { id: 'f2', advanced: true, name: 'B' } });
-  assert.deepEqual(calls, [['flow', 'f1'], ['advanced', 'f2']]);
+  await act.consumer('flow:x', false, { live: true, command: 'consumer.flow:x.off', name: 'Sauna' });
+  assert.deepEqual(calls, [['command', 'consumer.flow:x.on', 'Sauna: einschalten'], ['command', 'consumer.flow:x.off', 'Sauna: ausschalten']]);
   calls.length = 0;
-  assert.equal((await act.consumer('flow:x', true, { live: false, flow: { id: 'f1', advanced: false, name: 'A' } })).live, false);
-  assert.equal(calls.length, 0, 'Testbetrieb startet keinen Flow');
-  assert.equal((await act.consumer('flow:x', true, { live: true, flow: { id: '', advanced: false, name: '' } })).skipped, true);
-  assert.equal(calls.length, 0);
+  assert.equal((await act.consumer('flow:x', true, { live: false, command: 'consumer.flow:x.on', name: 'Sauna' })).live, false);
+  assert.equal(calls.length, 0, 'Testbetrieb gibt keinen Befehl aus');
   await act.consumer('dev1', true, { live: true });
-  assert.deepEqual(calls, [['device', 'dev1', 'onoff', true]], 'ohne flow: wie bisher das Gerät');
+  assert.deepEqual(calls, [['device', 'dev1', 'onoff', true]], 'ohne Befehl: wie bisher das Gerät');
 });
 
-test('Actuators.shed: mit eigenem Aus-Flow wird der Flow ausgelöst statt das Gerät zu lesen, ohne wie bisher', async () => {
+test('Actuators.shed: Gerät mit eigenem Aus-Befehl gibt «Schutz: ... ausschalten» aus statt das Gerät zu lesen, ohne wie bisher', async () => {
   const { act, calls } = fakeActuators();
-  const r = await act.shed('sauna', { live: true, offFlow: { id: 'f9', advanced: true, name: 'Sauna aus' } });
+  const r = await act.shed('sauna', { live: true, offFlow: { id: 'f9', advanced: true, name: 'Sauna aus' }, name: 'Sauna' });
   assert.deepEqual(r, {
-    cmd: 'off', live: true, via: 'flow', flow: 'Sauna aus',
+    cmd: 'off', live: true, via: 'command', command: 'shed.sauna', flow: 'Sauna aus',
   });
-  assert.deepEqual(calls, [['advanced', 'f9']]);
+  assert.deepEqual(calls, [['command', 'shed.sauna', 'Schutz: Sauna ausschalten']]);
   calls.length = 0;
   assert.equal((await act.shed('sauna', { live: false, offFlow: { id: 'f9', advanced: false, name: '' } })).live, false);
-  assert.equal(calls.length, 0, 'Testbetrieb löst keinen Flow aus');
+  assert.equal(calls.length, 0, 'Testbetrieb gibt keinen Befehl aus');
   act._api = async () => ({
     devices: {
       getDevice: async () => ({ capabilitiesObj: { onoff: {} } }),
@@ -116,13 +109,13 @@ test('Actuators.shed: mit eigenem Aus-Flow wird der Flow ausgelöst statt das Ge
   assert.deepEqual(calls, [['device', 'dev1', 'onoff', false]], 'ohne offFlow: wie bisher automatisch erkannt');
 });
 
-test('Actuators.shed: funktioniert auch ohne Geräte-Id (Wallbox hat keine eigene Shed-Geräte-Id, nur ihren Aus-Flow)', async () => {
+test('Actuators.shed: funktioniert auch ohne Geräte-Id (Wallbox hat keine eigene Shed-Geräte-Id, Befehl «shed.charger»)', async () => {
   const { act, calls } = fakeActuators();
-  const r = await act.shed(null, { live: true, offFlow: { id: 'f10', advanced: false, name: 'Wallbox aus' } });
+  const r = await act.shed(null, { live: true, offFlow: { id: 'f10', advanced: false, name: 'Wallbox aus' }, name: 'Wallbox' });
   assert.deepEqual(r, {
-    cmd: 'off', live: true, via: 'flow', flow: 'Wallbox aus',
+    cmd: 'off', live: true, via: 'command', command: 'shed.charger', flow: 'Wallbox aus',
   });
-  assert.deepEqual(calls, [['flow', 'f10']]);
+  assert.deepEqual(calls, [['command', 'shed.charger', 'Schutz: Wallbox ausschalten']]);
 });
 
 test('Inputs.listFlows: nur startbare, aktive, nicht defekte Flows, Standard und erweitert, sortiert', async () => {
@@ -189,7 +182,7 @@ function setup({ consumer = {}, inputs = {}, jobs = [] } = {}) {
     charger: async () => ({}),
     consumer: async (id, on, o) => {
       calls.push({
-        id, on, live: o.live, flow: o.flow,
+        id, on, live: o.live, command: o.command,
       }); return { cmd: on ? 'on' : 'off', live: o.live };
     },
   };
@@ -212,7 +205,7 @@ function setup({ consumer = {}, inputs = {}, jobs = [] } = {}) {
   };
 }
 
-test('Runner: flow-gesteuerter Verbraucher - kein Geräte-Lesen, Befehl startet den passenden Flow, Zustand wird selbst geführt', async () => {
+test('Runner: flow-gesteuerter Verbraucher - kein Geräte-Lesen, Befehl wird als Auslöser ausgegeben, Zustand wird selbst geführt', async () => {
   const {
     runner, calls, asked, state,
   } = setup();
@@ -220,7 +213,7 @@ test('Runner: flow-gesteuerter Verbraucher - kein Geräte-Lesen, Befehl startet 
   assert.deepEqual(asked, [[]], 'es wird kein Gerät gelesen');
   assert.equal(calls.length, 1);
   assert.deepEqual([calls[0].id, calls[0].on, calls[0].live], ['flow:s1', true, false]);
-  assert.equal(calls[0].flow.id, 'fOn', 'Einschalten startet den Ein-Flow');
+  assert.equal(calls[0].command, 'consumer.flow:s1.on', 'Einschalten gibt den Ein-Befehl aus');
   assert.equal(runner.consumerCurrent[0].isOn, true, 'selbst geführter Zustand');
   assert.notEqual(runner.consumerCurrent[0].reason, 'Gerät nicht erreichbar');
   // Überschuss weg: Aus-Flow
@@ -228,7 +221,7 @@ test('Runner: flow-gesteuerter Verbraucher - kein Geräte-Lesen, Befehl startet 
   await runner.tickCharger(at(12, 1));
   const off = calls[calls.length - 1];
   assert.equal(off.on, false);
-  assert.equal(off.flow.id, 'fOff');
+  assert.equal(off.command, 'consumer.flow:s1.off');
 });
 
 test('Runner: Flow-Verbraucher mit Leistung - eigener Verbrauch zählt zum Überschuss, kein Flattern', async () => {
@@ -256,7 +249,7 @@ test('Runner: Auftrag funktioniert auch mit Flow-Verbraucher (zeitgesteuert übe
   await runner.tickCharger(at(1, 1));
   assert.equal(calls.length, 1);
   assert.equal(calls[0].on, true);
-  assert.equal(calls[0].flow.id, 'fOn');
+  assert.equal(calls[0].command, 'consumer.flow:s1.on');
   assert.match(runner.consumerCurrent[0].reason, /Auftrag/);
 });
 
@@ -323,7 +316,7 @@ async function startUi(extra = {}) {
   const flows = [{ id: 'f1', name: 'Sauna an', advanced: false }, { id: 'f2', name: 'Sauna aus', advanced: true }];
   const res = {
     'GET /ems/shadow': {
-      enabled: true, deviceExists: true, shadow: true, config, pv: {}, current: null, charger: { current: null }, dhwPrices: extra.dhwPrices, pvAccuracy: extra.pvAccuracy,
+      enabled: true, deviceExists: true, shadow: true, config, pv: {}, current: null, charger: { current: null }, dhwPrices: extra.dhwPrices, pvAccuracy: extra.pvAccuracy, commands: extra.commands,
     },
     'GET /ems/consumers': { current: [], events: [] },
     'GET /ems/devices': {
@@ -362,50 +355,45 @@ test('Anzeige: Verbraucher per Flow - Schaltart wählbar, Flow-Dropdowns, Hinwei
   let html = ui.setup();
   assert.match(html, /Schalten über/);
   assert.match(html, /Gerät \(ein\/aus\)/);
-  assert.match(html, /Homey-Flows \(ein und aus\)/);
+  assert.match(html, /Befehl an einen Flow \(ein und aus\)/);
   assert.doesNotMatch(html, /Flow zum Einschalten/);
   // auf Flow umstellen
   ui.set('row1-kind', 'flow');
   ui.change({ 'data-ems-mode': '1' });
   html = ui.setup();
-  assert.match(html, /Flow zum Einschalten/);
-  assert.match(html, /Flow zum Ausschalten/);
-  assert.match(html, /Sauna an/);
-  assert.match(html, /Sauna aus \(erweitert\)/);
-  assert.match(html, /Start-Trigger «Dieser Flow wird gestartet»/);
+  assert.doesNotMatch(html, /Flow zum Einschalten/, 'keine Flow-Auswahl mehr: die App gibt Befehle aus');
+  assert.match(html, /Die App gibt aus:/);
   assert.match(html, /Leistung des Verbrauchers/);
-  // Flows wählen
+  // Name und Leistung eintragen
   ui.set('row1-name', 'Sauna');
-  ui.set('row1-flowOn', 'f1');
-  ui.set('row1-flowOff', 'f2');
   ui.set('row1-assumedW', '3000');
   ui.change({ 'data-ems-mode': '1' });
   const c = ui.ctx.window.EmsUi._collect().ems.consumers;
   assert.equal(c.length, 1);
   assert.equal(c[0].controlKind, 'flow');
   assert.match(c[0].id, /^flow:/);
-  assert.equal(JSON.stringify(c[0].flowOn), JSON.stringify({ id: 'f1', advanced: false, name: 'Sauna an' }));
-  assert.equal(JSON.stringify(c[0].flowOff), JSON.stringify({ id: 'f2', advanced: true, name: 'Sauna aus' }));
   assert.equal(c[0].assumedW, 3000);
-  assert.match(ui.setup(), /Bei Überschuss - nicht gesteuert|Bei voller Batterie - nicht gesteuert/, 'Betriebsart erscheint, sobald ein Flow gewählt ist');
+  assert.match(ui.setup(), /Sauna: einschalten/, 'die Befehle tragen den Namen des Verbrauchers');
+  assert.match(ui.setup(), /Bei Überschuss - nicht gesteuert|Bei voller Batterie - nicht gesteuert/, 'Betriebsart erscheint sofort, es muss kein Flow gewählt werden');
   // zurück auf Gerät: künstliche ID verschwindet
   ui.set('row1-kind', 'device');
   ui.change({ 'data-ems-mode': '1' });
   assert.equal(ui.ctx.window.EmsUi._collect().ems.consumers.length, 0, 'ohne Gerät kein Verbraucher');
 });
 
-test('Anzeige: ohne startbare Flows steht ein Hinweis, gespeicherter Flow-Verbraucher bleibt erhalten', async () => {
+test('Anzeige: gespeicherter Flow-Verbraucher bleibt erhalten und zeigt seine Befehle (auch ohne startbare Flows)', async () => {
   const saved = [{
     id: 'flow:abc', name: 'Sauna', controlKind: 'flow', flowOn: { id: 'f1', name: 'Sauna an' }, flowOff: { id: 'f2', name: 'Sauna aus' }, assumedW: 2000, mode: 'surplus',
   }];
   const ui = await startUi({ consumers: saved, noFlows: true });
   ui.click({ 'data-ems-open': 'row1' });
   const html = ui.setup();
-  assert.match(html, /keine startbaren Flows gefunden/);
-  assert.match(html, /<option value="f1" selected>Sauna an/, 'gewählter Flow bleibt sichtbar, auch wenn die Liste leer ist');
+  assert.doesNotMatch(html, /keine startbaren Flows gefunden/);
+  assert.match(html, /Sauna: einschalten/);
+  assert.match(html, /Sauna: ausschalten/);
   const c = ui.ctx.window.EmsUi._collect().ems.consumers[0];
   assert.equal(c.id, 'flow:abc');
-  assert.equal(c.flowOn.id, 'f1');
+  assert.equal(c.controlKind, 'flow');
 });
 
 test('Symbol-Wahl eines Verbrauchers speichert sofort (kein Speichern-Knopf nötig), aber nie eine Zeile ohne Gerät', async () => {
@@ -485,6 +473,30 @@ test('Anzeige: SG-Ready-Bereich ist da, standardmässig aus, und die Einstellung
   assert.equal(sg.minRunMin, 90);
 });
 
+test('Anzeige: Flow-Rezepte - alle Befehle gruppiert mit Hinweis, «Testen» gibt den Befehl einzeln aus', async () => {
+  const commands = [
+    { id: 'battery.charge', group: 'battery', groupTitle: 'Batterie', title: 'Batterie: aus dem Netz laden' },
+    { id: 'battery.hold', group: 'battery', groupTitle: 'Batterie', title: 'Batterie: halten (nicht entladen)' },
+    { id: 'consumer.flow:a.on', group: 'consumer', groupTitle: 'Verbraucher', title: 'Entfeuchter: einschalten' },
+  ];
+  const ui = await startUi({ commands });
+  ui.click({ 'data-ems-open': 'cmd' });
+  const h = ui.setup();
+  assert.match(h, /Das Energiemanagement gibt einen Befehl/, 'sagt, welche Karte der Flow braucht');
+  assert.match(h, /Batterie: aus dem Netz laden/);
+  assert.match(h, /Entfeuchter: einschalten/);
+  assert.match(h, /data-ems-cmdtest="battery.hold"/, 'Testknopf je Befehl');
+  assert.match(h, /Laden: Karte deiner Batterie/, 'Hinweis zur Gruppe Batterie');
+  ui.click({ 'data-ems-cmdtest': 'battery.hold' });
+  await ui.flush();
+  const call = ui.calls.find((c) => c[0] === 'POST' && c[1] === '/ems/command-test');
+  assert.ok(call, 'ruft die App auf');
+  assert.deepEqual(JSON.parse(JSON.stringify(call[2])), { id: 'battery.hold' });
+  const empty = await startUi();
+  empty.click({ 'data-ems-open': 'cmd' });
+  assert.match(empty.setup(), /Keine Befehle \(noch nichts eingerichtet\)/);
+});
+
 test('Anzeige: SG-Ready - Erklärtexte, Betriebsart, Ausgabe über Relais oder Flows', async () => {
   const relays = await startUi({
     sgready: {
@@ -502,14 +514,14 @@ test('Anzeige: SG-Ready - Erklärtexte, Betriebsart, Ausgabe über Relais oder F
   const flows = await startUi({ sgready: { enabled: true, output: 'flows', flowBoost: { id: 'f1', name: 'Sauna an' } } });
   flows.click({ 'data-ems-open': 'sg' });
   const h2 = flows.setup();
-  assert.match(h2, /Flow Normalbetrieb \(0:0\)/);
-  assert.match(h2, /Flow Empfehlung \(0:1\)/);
+  assert.match(h2, /SG-Ready: Normalbetrieb/);
+  assert.match(h2, /SG-Ready: Empfehlung/);
   assert.doesNotMatch(h2, /Relais Empfehlung/);
-  flows.set('ems-sg-fb', 'f1'); // die nachgebildete Oberfläche liefert sonst leere Werte
+  // keine Flow-Auswahl mehr: die App gibt Befehle aus
   flows.set('ems-sg-output', 'flows');
   const sg = flows.ctx.window.EmsUi._collect().ems.sgready;
   assert.equal(sg.output, 'flows');
-  assert.equal(sg.flowBoost.id, 'f1');
+  assert.equal(sg.flowBoost.id, 'f1', 'bleibt unverändert gespeichert');
   assert.equal(relays.ctx.window.EmsUi._collect().ems.sgready.modeOkValue, 'Automatik');
   assert.ok(h1.indexOf('SG-Ready-Steuerung') > h1.indexOf('Verbraucher') && h1.indexOf('SG-Ready-Steuerung') < h1.indexOf('Hausanschluss-Schutz'), 'Boiler steht unter den Verbrauchern, vor dem Hausanschluss');
 });
@@ -533,7 +545,7 @@ test('Anzeige: Warmwasser-Programm - günstigste Stunden statt Preis, mit Vorsch
   assert.match(h, /Vorschau: <b>Heute:<\/b> 02:00-03:00 \(Ø 8\.0 Rp\.\)/);
   assert.match(h, /<b>Morgen:<\/b> 05:00-06:00 \(Ø 8\.0 Rp\.\)/, '1 h von den 2 günstigen Morgenstunden: die früheste bei Gleichstand');
   assert.match(h, /Nur starten unter Warmwasser/);
-  assert.match(h, /Flow Warmwasser-Programm ein/);
+  assert.match(h, /Warmwasser: Programm ein/);
   assert.doesNotMatch(h, /Gerät und Capability der App-Funktion/);
   const c1 = flows.ctx.window.EmsUi._collect().ems;
   assert.equal(c1.dhw.flowOn.id, 'f1');
@@ -555,7 +567,7 @@ test('Anzeige: Warmwasser-Programm - günstigste Stunden statt Preis, mit Vorsch
   const h2 = cap.setup();
   assert.match(h2, /Gerät und Capability der App-Funktion/);
   assert.match(h2, /Wert für zurück auf Normal/);
-  assert.doesNotMatch(h2, /Flow Warmwasser-Programm ein/);
+  assert.doesNotMatch(h2, /Warmwasser: Programm ein/);
   assert.equal(cap.ctx.window.EmsUi._collect().ems.dhw.device.offValue, 'false');
   const sg = await startUi({ sgready: { enabled: true } });
   sg.click({ 'data-ems-open': 'sg' });
@@ -725,7 +737,7 @@ test('Inputs: mehrere Lesungen desselben Geräts im selben Takt = eine einzige A
   }
 });
 
-test('Wallbox: Anschluss (Capabilities und Flow-Karten) einstellbar - Bereich da, Standardwerte gehen mit dem Speichern mit, eigene Werte ebenfalls', async () => {
+test('Wallbox: Anschluss (Capabilities) einstellbar - Bereich da, Standardwerte gehen mit dem Speichern mit, eigene Werte ebenfalls; Befehle statt Karten', async () => {
   const none = await startUi();
   none.click({ 'data-ems-open': 'row0' });
   assert.doesNotMatch(none.setup(), /Anschluss der Wallbox/, 'ohne gewähltes Gerät kein Bereich (nichts, was beim Speichern überschrieben würde)');
@@ -737,15 +749,12 @@ test('Wallbox: Anschluss (Capabilities und Flow-Karten) einstellbar - Bereich da
   assert.doesNotMatch(h, /go-e/i, 'neutral: kein Herstellername in den Texten');
   const c0 = ui.ctx.window.EmsUi._collect().ems.charger;
   assert.deepEqual(
-    [c0.stateCapability, c0.powerCapability, c0.phaseCapability, c0.startCard, c0.powerCard, c0.powerArg],
-    ['evcharger_charging_state', 'measure_power', 'goe_measure_phase_switching', 'evcharger_charging_start', 'target_power_set', 'target_power'],
+    [c0.stateCapability, c0.powerCapability, c0.phaseCapability],
+    ['evcharger_charging_state', 'measure_power', 'goe_measure_phase_switching'],
   );
-  ui.set('ems-wb-powercard', 'set_watts');
-  ui.set('ems-wb-powerarg', 'watts');
-  ui.set('ems-wb-startcard', '');
   ui.set('ems-wb-phase', '');
   const c1 = ui.ctx.window.EmsUi._collect().ems.charger;
-  assert.deepEqual([c1.powerCard, c1.powerArg, c1.startCard, c1.phaseCapability], ['set_watts', 'watts', '', '']);
+  assert.deepEqual([c1.phaseCapability], ['']);
 });
 
 test('Kostenzähler ohne steuerbares Gerät (z. B. Wärmepumpe): die Symbol-Wahl wird gespeichert und beim Neuladen wieder angezeigt', async () => {
@@ -775,29 +784,13 @@ test('Wallbox-Zeile: «Anschluss der Wallbox» steht über dem «Hausbatterie-Sc
   assert.ok(a > 0 && b > 0 && a < b, 'Anschluss zuerst, dann Hausbatterie-Schutz');
 });
 
-test('Einklappteile öffnen sich selbst, wenn Aufmerksamkeit nötig ist: erste fehlende Pflichtquelle, fehlende Wallbox-Karte; sonst bleiben sie zu', async () => {
+test('Einklappteile öffnen sich selbst, wenn Aufmerksamkeit nötig ist: erste fehlende Pflichtquelle; sonst bleiben sie zu', async () => {
   const ok = await startUi({ charger: { id: 'lamp', enabled: true } });
   assert.doesNotMatch(ok.setup(), /id="src-grid-dev"/, 'Netzzähler gewählt: Quelle zu');
   assert.doesNotMatch(ok.setup(), /<details class="ems-adv" open>/, 'nichts offen, wenn alles in Ordnung ist');
   const bare = await startUi({ noMeter: true });
   assert.match(bare.setup(), /id="src-grid-dev"/, 'Netzzähler fehlt (Pflicht): die erste fehlende Pflichtquelle ist aufgeklappt');
   assert.doesNotMatch(bare.setup(), /id="src-pv-dev"/, 'nur die erste');
-  const missing = await startUi({
-    charger: { id: 'lamp', enabled: true },
-    deviceCards: { cards: [{ id: 'other_card', title: 'Andere Karte', args: [] }] },
-  });
-  missing.click({ 'data-ems-open': 'row0' });
-  await missing.flush();
-  const h = missing.setup();
-  assert.match(h, /<details class="ems-adv" open><summary data-ems-adv="row0-link">[^<]*<span class="ems-warn">⚠ Karte fehlt/, 'Anschluss offen, Warnung in der Titelzeile');
-  const fine = await startUi({
-    charger: { id: 'lamp', enabled: true },
-    deviceCards: { cards: [{ id: 'target_power_set', title: 'Leistung', args: [{ name: 'target_power', type: 'number', title: 'W' }] }] },
-  });
-  fine.click({ 'data-ems-open': 'row0' });
-  await fine.flush();
-  assert.doesNotMatch(fine.setup(), /data-ems-adv="row0-link">[^<]*<span class="ems-warn">/, 'Karte vorhanden: keine Warnung');
-  assert.doesNotMatch(fine.setup(), /<details class="ems-adv" open><summary data-ems-adv="row0-link"/, 'und der Bereich bleibt zu');
 });
 
 test('Automatisch vorschlagen: eingetragene Zeilen sind farblich getönt und mit «Vorschlag» gekennzeichnet, der Speichern-Knopf zeigt offene Änderungen; schon Gewähltes bleibt unmarkiert', async () => {
@@ -916,47 +909,6 @@ test('Warmwasser verzögern: Option mit allen Einstellungen, standardmässig aus
   assert.equal(c.delay.minForecastKwh, 8);
   assert.equal(c.delay.releaseWeekday, '15:30');
   assert.equal(c.priceFrom, '2027-01-01');
-});
-
-test('Warmwasser-Ausgabe «Aktionskarte»: Gerät, Karte, Argumente und Temperaturen werden gesammelt; ohne Karte warnt das Verzögern', async () => {
-  const cards = {
-    cards: [{
-      id: 'write_register',
-      title: 'Register schreiben',
-      args: [
-        { name: 'register', type: 'text', title: 'Register' },
-        { name: 'value', type: 'number', title: 'Wert' },
-        { name: 'mode', type: 'dropdown', title: 'Modus', values: [{ id: 'sim', title: 'Simulation' }, { id: 'live', title: 'Live' }] },
-      ],
-    }],
-  };
-  const ui = await startUi({ dhw: { enabled: true, output: 'card', delay: { enabled: true } }, deviceCards: cards });
-  ui.click({ 'data-ems-open': 'dhw' });
-  let h = ui.setup();
-  assert.match(h, /Aktionskarte eines Geräts/);
-  assert.match(h, /Zum Verzögern fehlt die Aktionskarte/, 'ohne Gerät und Karte: Warnung');
-  assert.doesNotMatch(h, /Flow «Soll absenken/, 'bei Karte keine Flow-Auswahl fürs Verzögern');
-  ui.set('ems-dhw-sp-dev', 'lamp');
-  ui.change({ id: 'ems-dhw-sp-dev', 'data-ems-sgdev': '1' });
-  await ui.flush();
-  ui.set('ems-dhw-sp-card', 'write_register');
-  ui.change({ id: 'ems-dhw-sp-card', 'data-ems-sgdev': '1' });
-  await ui.flush();
-  h = ui.setup();
-  assert.match(h, /Argument für den Soll/);
-  assert.match(h, /id="ems-dhw-sp-a-register"/);
-  ui.set('ems-dhw-sp-a-register', '1012');
-  ui.set('ems-dhw-sp-a-mode', 'live');
-  ui.set('ems-dhw-sp-prog', '51');
-  const sp = JSON.parse(JSON.stringify(ui.ctx.window.EmsUi._collect().ems.dhw.setpoint));
-  assert.equal(sp.deviceId, 'lamp');
-  assert.equal(sp.card, 'write_register');
-  assert.equal(sp.valueArg, 'value');
-  assert.equal(sp.args.register, '1012');
-  assert.equal(sp.args.mode, 'live');
-  assert.equal(sp.programC, 51);
-  assert.equal(sp.delayC, 30);
-  assert.equal(ui.ctx.window.EmsUi._collect().ems.dhw.output, 'card');
 });
 
 test('Warmwasser-Ausgabe «Auslöser mit Wert»: erklärt den Flow, zeigt nur die drei Temperaturen, kein Gerät und keine Karte; das Verzögern warnt nicht', async () => {
